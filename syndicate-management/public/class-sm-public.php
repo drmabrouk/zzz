@@ -740,6 +740,52 @@ class SM_Public {
         wp_send_json_success();
     }
 
+    public function ajax_get_user_role() {
+        if (!current_user_can('sm_manage_users') && !current_user_can('manage_options')) wp_send_json_error('Unauthorized');
+        $user_id = intval($_GET['user_id']);
+        $user = get_userdata($user_id);
+        if ($user) {
+            $role = !empty($user->roles) ? $user->roles[0] : '';
+            wp_send_json_success(['role' => $role]);
+        }
+        wp_send_json_error('User not found');
+    }
+
+    public function ajax_update_member_account() {
+        if (!current_user_can('sm_manage_members')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_admin_action', 'sm_nonce');
+
+        $member_id = intval($_POST['member_id']);
+        $wp_user_id = intval($_POST['wp_user_id']);
+        $email = sanitize_email($_POST['email']);
+        $password = $_POST['password'] ?? '';
+        $role = $_POST['role'] ?? '';
+
+        if (!$this->can_access_member($member_id)) wp_send_json_error('Access denied');
+
+        // Update email in WP User and SM Members table
+        $user_data = ['ID' => $wp_user_id, 'user_email' => $email];
+        if (!empty($password)) {
+            $user_data['user_pass'] = $password;
+        }
+
+        $res = wp_update_user($user_data);
+        if (is_wp_error($res)) wp_send_json_error($res->get_error_message());
+
+        // Handle role change (only for full admins)
+        if (!empty($role) && (current_user_can('sm_full_access') || current_user_can('manage_options'))) {
+            $user = new WP_User($wp_user_id);
+            $user->set_role($role);
+        }
+
+        // Sync email to members table
+        global $wpdb;
+        $wpdb->update("{$wpdb->prefix}sm_members", ['email' => $email], ['id' => $member_id]);
+
+        SM_Logger::log('تحديث حساب عضو', "تم تحديث بيانات الحساب للعضو ID: $member_id");
+        wp_send_json_success();
+    }
+
     public function ajax_export_survey_results() {
         if (!current_user_can('manage_options')) wp_die('Unauthorized');
         $id = intval($_GET['id']);

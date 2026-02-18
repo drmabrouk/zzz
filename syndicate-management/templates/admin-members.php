@@ -104,8 +104,7 @@ if ($import_results) {
                     <th>الدرجة الوظيفية</th>
                     <th>التخصص</th>
                     <th>رقم العضوية</th>
-                    <th>الرصيد</th>
-                    <th>الحالة</th>
+                    <th>المبلغ المستحق</th>
                     <th>الإجراءات</th>
                 </tr>
             </thead>
@@ -138,10 +137,13 @@ if ($import_results) {
                             <td><?php echo esc_html($specs[$member->specialization] ?? $member->specialization); ?></td>
                             <td><?php echo esc_html($member->membership_number); ?></td>
                             <td style="font-weight:700; color:<?php echo $finance['balance'] > 0 ? '#e53e3e' : '#38a169'; ?>;"><?php echo number_format($finance['balance'], 2); ?></td>
-                            <td><span class="sm-badge sm-badge-low"><?php echo esc_html($statuses[$member->membership_status] ?? $member->membership_status); ?></span></td>
                             <td>
                                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                                    <a href="<?php echo add_query_arg('sm_tab', 'member-profile'); ?>&member_id=<?php echo $member->id; ?>" class="sm-btn sm-btn-outline" style="padding: 5px 12px; font-size: 12px; height: 32px; text-decoration:none; display:flex; align-items:center;">عرض الملف</a>
+                                    <a href="<?php echo add_query_arg('sm_tab', 'member-profile'); ?>&member_id=<?php echo $member->id; ?>" class="sm-btn sm-btn-outline" style="padding: 5px 12px; font-size: 12px; height: 32px; text-decoration:none; display:flex; align-items:center;">عرض</a>
+                                    <?php if ($can_manage_members): ?>
+                                        <button onclick='editSmMember(<?php echo json_encode($member); ?>)' class="sm-btn sm-btn-outline" style="padding: 5px 12px; font-size: 12px; height: 32px; color: #2c3e50; border-color: #2c3e50;">تعديل</button>
+                                        <button onclick='smOpenMemberAccountModal(<?php echo json_encode(["id" => $member->id, "wp_user_id" => $member->wp_user_id, "name" => $member->name, "email" => $member->email]); ?>)' class="sm-btn" style="padding: 5px 12px; font-size: 12px; height: 32px; background: #2c3e50;">الحساب</button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -207,6 +209,43 @@ if ($import_results) {
             </form>
         </div>
     </div>
+    <div id="member-account-modal" class="sm-modal-overlay">
+        <div class="sm-modal-content" style="max-width: 500px;">
+            <div class="sm-modal-header">
+                <h3>إعدادات حساب المستخدم: <span id="acc_member_name"></span></h3>
+                <button class="sm-modal-close" onclick="document.getElementById('member-account-modal').style.display='none'">&times;</button>
+            </div>
+            <form id="member-account-form">
+                <?php wp_nonce_field('sm_admin_action', 'sm_nonce'); ?>
+                <input type="hidden" name="member_id" id="acc_member_id">
+                <input type="hidden" name="wp_user_id" id="acc_wp_user_id">
+                <div style="padding: 20px;">
+                    <div class="sm-form-group">
+                        <label class="sm-label">البريد الإلكتروني:</label>
+                        <input name="email" id="acc_email" type="email" class="sm-input" required>
+                    </div>
+                    <div class="sm-form-group">
+                        <label class="sm-label">كلمة مرور جديدة (اتركها فارغة إذا لم ترد التغيير):</label>
+                        <input name="password" type="password" class="sm-input">
+                    </div>
+                    <?php if (current_user_can('sm_full_access') || current_user_can('manage_options')): ?>
+                    <div class="sm-form-group">
+                        <label class="sm-label">الدور / الصلاحيات:</label>
+                        <select name="role" id="acc_role" class="sm-select">
+                            <option value="sm_syndicate_member">عضو نقابة (افتراضي)</option>
+                            <option value="sm_syndicate_admin">مسؤول نقابة</option>
+                            <option value="sm_system_admin">مدير نظام</option>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button type="submit" class="sm-btn" style="flex: 1;">حفظ التغييرات</button>
+                        <button type="button" class="sm-btn sm-btn-outline" style="flex: 1;" onclick="document.getElementById('member-account-modal').style.display='none'">إلغاء</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
     <?php endif; ?>
 
     <script>
@@ -237,6 +276,26 @@ if ($import_results) {
             document.querySelectorAll('.member-checkbox').forEach(cb => cb.checked = master.checked);
         };
 
+        window.smOpenMemberAccountModal = function(data) {
+            document.getElementById('acc_member_id').value = data.id;
+            document.getElementById('acc_wp_user_id').value = data.wp_user_id;
+            document.getElementById('acc_member_name').innerText = data.name;
+            document.getElementById('acc_email').value = data.email;
+
+            // If role dropdown exists (for full admins)
+            const roleSelect = document.getElementById('acc_role');
+            if (roleSelect && data.wp_user_id) {
+                // We'd ideally fetch the current role via AJAX or have it in the data
+                // For now let's set it to default and maybe add a quick fetch
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=sm_get_user_role&user_id=' + data.wp_user_id)
+                .then(r => r.json()).then(res => {
+                    if (res.success) roleSelect.value = res.data.role;
+                });
+            }
+
+            document.getElementById('member-account-modal').style.display = 'flex';
+        };
+
         // Form submissions...
         const addMemberForm = document.getElementById('add-member-form');
         if (addMemberForm) {
@@ -246,6 +305,17 @@ if ($import_results) {
                 formData.append('action', 'sm_add_member_ajax');
                 fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
                 .then(r => r.json()).then(res => { if(res.success) location.reload(); else alert(res.data); });
+            };
+        }
+
+        const accMemberForm = document.getElementById('member-account-form');
+        if (accMemberForm) {
+            accMemberForm.onsubmit = function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                formData.append('action', 'sm_update_member_account_ajax');
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
+                .then(r => r.json()).then(res => { if(res.success) { alert('تم التحديث بنجاح'); location.reload(); } else alert(res.data); });
             };
         }
 

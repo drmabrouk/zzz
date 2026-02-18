@@ -480,11 +480,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                     </li>
                 <?php endif; ?>
 
-                <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin): ?>
-                    <li class="sm-sidebar-item <?php echo $active_tab == 'staffs' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'staffs'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-users"></span> <?php echo $labels['tab_staffs']; ?></a>
-                    </li>
-                <?php endif; ?>
 
                 <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin): ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'printing' ? 'sm-active' : ''; ?>">
@@ -502,9 +497,10 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                     <li class="sm-sidebar-item <?php echo $active_tab == 'global-settings' ? 'sm-active' : ''; ?>">
                         <a href="javascript:void(0)" onclick="smToggleSidebarDropdown(this)" class="sm-sidebar-link sm-has-dropdown"><span class="dashicons dashicons-admin-generic"></span> <?php echo $labels['tab_global_settings']; ?></a>
                         <ul class="sm-sidebar-dropdown" style="display: <?php echo $active_tab == 'global-settings' ? 'block' : 'none'; ?>;">
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=init" class="sm-sub-active"><span class="dashicons dashicons-admin-tools"></span> تهيئة النظام</a></li>
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=design"><span class="dashicons dashicons-art"></span> التصميم والمظهر</a></li>
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=backup"><span class="dashicons dashicons-database-export"></span> النسخ الاحتياطي</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=init" class="<?php echo (!isset($_GET['sub']) || $_GET['sub'] == 'init') ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-admin-tools"></span> تهيئة النظام</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=staff" class="<?php echo ($_GET['sub'] ?? '') == 'staff' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-admin-users"></span> <?php echo $labels['tab_staffs']; ?></a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=design" class="<?php echo ($_GET['sub'] ?? '') == 'design' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-art"></span> التصميم والمظهر</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=backup" class="<?php echo ($_GET['sub'] ?? '') == 'backup' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-database-export"></span> النسخ الاحتياطي</a></li>
                         </ul>
                     </li>
                 <?php endif; ?>
@@ -556,12 +552,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                     include SM_PLUGIN_DIR . 'templates/messaging-center.php';
                     break;
 
-                case 'staff':
-                case 'staffs':
-                    if ($is_admin || current_user_can('sm_manage_users')) {
-                        include SM_PLUGIN_DIR . 'templates/admin-staff.php';
-                    }
-                    break;
 
                 case 'member-profile':
                 case 'my-profile':
@@ -602,6 +592,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                         ?>
                         <div class="sm-tabs-wrapper" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; overflow-x: auto; white-space: nowrap; padding-bottom: 10px;">
                             <button class="sm-tab-btn <?php echo $sub == 'init' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('syndicate-settings', this)">تهيئة النظام</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'staff' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('system-users-settings', this)">إدارة مستخدمي النظام</button>
                             <button class="sm-tab-btn" onclick="smOpenInternalTab('professional-settings', this)">الدرجات والتخصصات</button>
                             <button class="sm-tab-btn <?php echo $sub == 'design' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('design-settings', this)">التصميم والمظهر</button>
                             <button class="sm-tab-btn <?php echo $sub == 'backup' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('backup-settings', this)">مركز النسخ الاحتياطي</button>
@@ -646,6 +637,10 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                     <button type="submit" name="sm_save_labels" class="sm-btn" style="width:auto; margin-top:10px; background: #2c3e50;">حفظ المسميات الجديدة</button>
                                 </form>
                             </div>
+                        </div>
+
+                        <div id="system-users-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'staff' ? 'block' : 'none'; ?>;">
+                            <?php include SM_PLUGIN_DIR . 'templates/admin-staff.php'; ?>
                         </div>
 
                         <div id="professional-settings" class="sm-internal-tab" style="display:none;">

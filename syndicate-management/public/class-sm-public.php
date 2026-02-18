@@ -927,7 +927,24 @@ class SM_Public {
 
         if (!$gov && !current_user_can('manage_options')) wp_send_json_error('No governorate assigned');
 
-        wp_send_json_success(SM_DB::get_governorate_conversations($gov));
+        if (in_array('sm_syndicate_member', (array)$user->roles)) {
+             // Members see officials of their governorate
+             $officials = SM_DB::get_governorate_officials($gov);
+             $data = [];
+             foreach($officials as $o) {
+                 $data[] = [
+                     'official' => [
+                         'ID' => $o->ID,
+                         'display_name' => $o->display_name,
+                         'avatar' => get_avatar_url($o->ID)
+                     ]
+                 ];
+             }
+             wp_send_json_success(['type' => 'member_view', 'officials' => $data]);
+        } else {
+             // Officials see members' tickets
+             wp_send_json_success(['type' => 'official_view', 'conversations' => SM_DB::get_governorate_conversations($gov)]);
+        }
     }
 
     public function ajax_mark_read() {

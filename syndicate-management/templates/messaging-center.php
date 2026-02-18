@@ -59,12 +59,13 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
         <!-- Chat Header -->
         <div id="sm-msg-header" style="display: none; padding: 15px 30px; border-bottom: 1px solid #f0f2f5; background: #fff; z-index: 10;">
             <div style="display: flex; align-items: center; gap: 15px;">
+                <button id="sm-msg-back" class="sm-mobile-only" style="background:none; border:none; color:var(--sm-primary-color); cursor:pointer;"><span class="dashicons dashicons-arrow-right-alt2"></span></button>
                 <div id="sm-header-avatar" style="width: 45px; height: 45px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid var(--sm-primary-color);"></div>
                 <div style="flex: 1;">
                     <h3 id="sm-header-name" style="margin:0; font-size: 1.1em; font-weight: 800; color: var(--sm-dark-color);"></h3>
                     <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; color: #38a169; font-weight: 600;">
                         <span style="width: 8px; height: 8px; background: #38a169; border-radius: 50%;"></span>
-                        متصل باللجنة النقابية
+                        متصل باللجنة النقابية | <span id="sm-header-ticket-id" style="color: #64748b;"></span>
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -135,6 +136,18 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
 .sm-msg-sent .sm-file-card { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
 
 #sm-msg-input:focus { border-color: var(--sm-primary-color); outline: none; box-shadow: 0 0 0 3px rgba(246, 48, 73, 0.1); background: #fff; }
+
+.sm-pulse { animation: sm-pulse-red 2s infinite; }
+@keyframes sm-pulse-red { 0% { box-shadow: 0 0 0 0 rgba(246, 48, 73, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(246, 48, 73, 0); } 100% { box-shadow: 0 0 0 0 rgba(246, 48, 73, 0); } }
+
+.sm-mobile-only { display: none; }
+@media (max-width: 768px) {
+    .sm-mobile-only { display: block; }
+    .sm-msg-sidebar { width: 100% !important; border-left: none !important; }
+    .sm-msg-main { display: none !important; }
+    .sm-messaging-wrapper.chat-active .sm-msg-sidebar { display: none !important; }
+    .sm-messaging-wrapper.chat-active .sm-msg-main { display: flex !important; width: 100% !important; }
+}
 </style>
 
 <script>
@@ -148,7 +161,19 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
 
     window.handleFileSelect = function(input) {
         if (input.files && input.files[0]) {
-            $('#sm-file-name').text(input.files[0].name);
+            const file = input.files[0];
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('عذراً، يسمح فقط بملفات PDF والصور (JPG, PNG, GIF).');
+                input.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('عذراً، الحد الأقصى لحجم الملف هو 5 ميجابايت.');
+                input.value = '';
+                return;
+            }
+            $('#sm-file-name').text(file.name);
             $('#sm-file-preview').fadeIn();
         }
     };
@@ -186,12 +211,12 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
                 `);
                 listContainer.append(committeeItem);
 
-                // Add assigned officials if any (Visual only as per requirement)
+                // Add assigned officials
                 if (res.success && res.data.officials) {
                     res.data.officials.forEach(o => {
                         const off = o.official;
                         const item = $(`
-                            <div class="sm-conv-item" style="opacity: 0.8; border-right: 2px solid #e2e8f0; margin-right: 10px;" title="مسؤول باللجنة">
+                            <div class="sm-conv-item" style="border-right: 2px solid #e2e8f0; margin-right: 10px;" title="مسؤول باللجنة" onclick="selectConversation(${myMemberId}, '${off.display_name}', ${off.ID}, this)">
                                 <div class="sm-conv-avatar" style="width:35px; height:35px;">
                                     <img src="${off.avatar}" style="width:100%;">
                                 </div>
@@ -223,10 +248,11 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
             if (res.success && res.data.conversations && res.data.conversations.length > 0) {
                 res.data.conversations.forEach(c => {
                     const activeClass = (currentActiveMemberId == c.member.id) ? 'active' : '';
+                    const avatar = c.member.avatar || 'https://www.gravatar.com/avatar/?d=mp';
                     const item = $(`
                         <div class="sm-conv-item ${activeClass}" data-member-id="${c.member.id}" onclick="selectConversation(${c.member.id}, '${c.member.name}', ${c.member.wp_user_id}, this)">
                             <div class="sm-conv-avatar">
-                                <img src="${c.member.photo_url || 'https://www.gravatar.com/avatar/?d=mp'}" style="width:100%; height:100%; object-fit:cover;">
+                                <img src="${avatar}" style="width:100%; height:100%; object-fit:cover;">
                             </div>
                             <div class="sm-conv-info">
                                 <div class="sm-conv-name">${c.member.name}</div>
@@ -245,14 +271,19 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
     window.selectConversation = function(memberId, name, wpUserId, element) {
         currentActiveMemberId = memberId;
 
-        $('.sm-conv-item').removeClass('active');
+        $('.sm-conv-item').removeClass('active sm-pulse');
         if (element) $(element).addClass('active');
 
+        $('.sm-messaging-wrapper').addClass('chat-active');
         $('#sm-msg-welcome').hide();
         $('#sm-msg-header, #sm-msg-body, #sm-msg-footer').show();
 
         $('#sm-header-name').text(name);
-        $('#sm-header-avatar').html(`<img src="https://www.gravatar.com/avatar/${wpUserId}?d=mp" style="width:100%; height:100%; object-fit:cover;">`);
+        $('#sm-header-ticket-id').text('تذكرة رقم: #' + memberId);
+
+        // Find avatar from element if possible or use gravatar as fallback
+        const avatarUrl = $(element).find('img').attr('src') || `https://www.gravatar.com/avatar/${wpUserId}?d=mp`;
+        $('#sm-header-avatar').html(`<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover;">`);
 
         $('#sm_chat_member_id').val(memberId);
         $('#sm_chat_receiver_id').val(isOfficial ? wpUserId : 0);
@@ -260,8 +291,22 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
         fetchMessages(memberId);
 
         if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(() => fetchMessages(memberId, true), 4000);
+
+        const startPolling = (ms) => {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(() => {
+                if (!document.hidden) fetchMessages(memberId, true);
+            }, ms);
+        };
+
+        startPolling(4000);
+
+        $(window).off('focus blur').on('focus', () => startPolling(4000)).on('blur', () => startPolling(15000));
     };
+
+    $('#sm-msg-back').on('click', () => {
+        $('.sm-messaging-wrapper').removeClass('chat-active');
+    });
 
     window.fetchMessages = function(memberId, isPolling = false) {
         const body = $('#sm-msg-body');
@@ -307,6 +352,10 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
                 if (oldHtml !== html) {
                     body.html(html).data('current-html', html);
                     body.scrollTop(body[0].scrollHeight);
+
+                    if (isPolling && !$('.sm-conv-item.active').length) {
+                         $(`.sm-conv-item[data-member-id="${memberId}"]`).addClass('sm-pulse');
+                    }
                 }
             }
         });

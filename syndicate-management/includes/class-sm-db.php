@@ -301,6 +301,19 @@ class SM_DB {
         ));
     }
 
+    public static function get_governorate_officials($governorate) {
+        return get_users(array(
+            'role__in' => array('sm_system_admin', 'sm_syndicate_admin'),
+            'meta_query' => array(
+                array(
+                    'key' => 'sm_governorate',
+                    'value' => $governorate,
+                    'compare' => '='
+                )
+            )
+        ));
+    }
+
     public static function get_governorate_conversations($governorate) {
         global $wpdb;
         $table = $wpdb->prefix . 'sm_messages';

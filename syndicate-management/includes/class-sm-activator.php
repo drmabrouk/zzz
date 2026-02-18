@@ -64,12 +64,15 @@ class SM_Activator {
             receiver_id bigint(20) NOT NULL,
             member_id mediumint(9),
             message text NOT NULL,
+            file_url text,
+            governorate varchar(50),
             is_read tinyint(1) DEFAULT 0,
             created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
             PRIMARY KEY  (id),
             KEY sender_id (sender_id),
             KEY receiver_id (receiver_id),
-            KEY member_id (member_id)
+            KEY member_id (member_id),
+            KEY governorate (governorate)
         ) $charset_collate;\n";
 
         // Logs Table
@@ -150,6 +153,13 @@ class SM_Activator {
         dbDelta($sql);
 
         self::setup_roles();
+        self::setup_cron();
+    }
+
+    private static function setup_cron() {
+        if (!wp_next_scheduled('sm_daily_maintenance')) {
+            wp_schedule_event(time(), 'daily', 'sm_daily_maintenance');
+        }
     }
 
     private static function migrate_settings() {

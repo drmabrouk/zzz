@@ -46,6 +46,7 @@ class Syndicate_Management {
         $this->loader->add_action('wp_ajax_sm_update_member_photo', $plugin_public, 'ajax_update_member_photo');
         $this->loader->add_action('wp_ajax_sm_send_message_ajax', $plugin_public, 'ajax_send_message');
         $this->loader->add_action('wp_ajax_sm_get_conversation_ajax', $plugin_public, 'ajax_get_conversation');
+        $this->loader->add_action('wp_ajax_sm_get_conversations_ajax', $plugin_public, 'ajax_get_conversations');
         $this->loader->add_action('wp_ajax_sm_mark_read', $plugin_public, 'ajax_mark_read');
         $this->loader->add_action('wp_ajax_sm_print', $plugin_public, 'handle_print');
         $this->loader->add_action('wp_ajax_sm_add_member_ajax', $plugin_public, 'ajax_add_member');
@@ -78,6 +79,7 @@ class Syndicate_Management {
         $this->loader->add_action('wp_ajax_nopriv_sm_reset_password_otp', $plugin_public, 'ajax_reset_password_otp');
         $this->loader->add_action('wp_ajax_nopriv_sm_activate_account_step1', $plugin_public, 'ajax_activate_account_step1');
         $this->loader->add_action('wp_ajax_nopriv_sm_activate_account_final', $plugin_public, 'ajax_activate_account_final');
+        $this->loader->add_action('sm_daily_maintenance', 'SM_DB', 'delete_expired_messages');
     }
 
     public function run() {

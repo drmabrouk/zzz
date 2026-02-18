@@ -276,15 +276,59 @@ class SM_DB {
         return ($max ? intval($max) : 0) + 1;
     }
 
-    public static function send_message($sender_id, $receiver_id, $message, $member_id = null) {
+    public static function send_message($sender_id, $receiver_id, $message, $member_id = null, $file_url = null, $governorate = null) {
         global $wpdb;
         return $wpdb->insert($wpdb->prefix . 'sm_messages', array(
             'sender_id' => $sender_id,
             'receiver_id' => $receiver_id,
             'member_id' => $member_id,
             'message' => $message,
+            'file_url' => $file_url,
+            'governorate' => $governorate,
             'created_at' => current_time('mysql')
         ));
+    }
+
+    public static function get_ticket_messages($member_id) {
+        global $wpdb;
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT m.*, u.display_name as sender_name
+             FROM {$wpdb->prefix}sm_messages m
+             LEFT JOIN {$wpdb->prefix}users u ON m.sender_id = u.ID
+             WHERE m.member_id = %d
+             ORDER BY m.created_at ASC",
+            $member_id
+        ));
+    }
+
+    public static function get_governorate_conversations($governorate) {
+        global $wpdb;
+        $results = $wpdb->get_results($wpdb->prepare(
+            "SELECT DISTINCT member_id
+             FROM {$wpdb->prefix}sm_messages
+             WHERE governorate = %s
+             ORDER BY created_at DESC",
+            $governorate
+        ));
+
+        $conversations = [];
+        foreach ($results as $row) {
+            $member = self::get_member_by_id($row->member_id);
+            if (!$member) continue;
+
+            $last_msg = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}sm_messages
+                 WHERE member_id = %d
+                 ORDER BY created_at DESC LIMIT 1",
+                $row->member_id
+            ));
+
+            $conversations[] = [
+                'member' => $member,
+                'last_message' => $last_msg
+            ];
+        }
+        return $conversations;
     }
 
     public static function get_conversation_messages($user1, $user2) {
@@ -310,6 +354,11 @@ class SM_DB {
              ORDER BY m.created_at DESC",
             $user_id
         ));
+    }
+
+    public static function delete_expired_messages() {
+        global $wpdb;
+        return $wpdb->query("DELETE FROM {$wpdb->prefix}sm_messages WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 YEAR)");
     }
 
     public static function get_conversations($user_id) {

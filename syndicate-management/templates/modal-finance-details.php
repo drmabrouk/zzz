@@ -23,31 +23,45 @@
             <table class="sm-table" style="font-size: 13px;">
                 <thead>
                     <tr style="background:#f8fafc;">
-                        <th>البند</th>
-                        <th>القيمة</th>
-                        <th>الغرامة</th>
-                        <th>المجموع</th>
+                        <th>البند (سبب الاستحقاق)</th>
+                        <th>الحالة</th>
+                        <th>قيمة الخدمة</th>
+                        <th>قيمة الغرامة</th>
+                        <th>إجمالي المستحق</th>
+                        <?php if (current_user_can('sm_manage_finance')): ?>
+                        <th>تحديد للسداد</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($dues['breakdown'] as $item):
+                    <?php foreach ($dues['breakdown'] as $index => $item):
                         $is_late = $item['penalty'] > 0;
                     ?>
                     <tr <?php echo $is_late ? 'style="background: #fff5f5;"' : ''; ?>>
                         <td style="<?php echo $is_late ? 'color: #c53030; font-weight: 700;' : ''; ?>">
-                            <?php if ($is_late): ?><span class="dashicons dashicons-warning" style="font-size: 16px; width: 16px; height: 16px; color: #e53e3e; vertical-align: middle;"></span><?php endif; ?>
+                            <?php if ($is_late): ?>
+                                <span class="dashicons dashicons-warning" style="font-size: 16px; width: 16px; height: 16px; color: #e53e3e; vertical-align: middle;"></span>
+                                <span style="color: #e53e3e; font-size: 10px; display: block;">غرامة تأخير (Fine)</span>
+                            <?php endif; ?>
                             <?php echo $item['item']; ?>
                         </td>
+                        <td><span class="sm-badge" style="background:#feb2b2; color:#9b2c2c; font-size:10px;">غير مسدد</span></td>
                         <td><?php echo number_format($item['amount'], 2); ?></td>
                         <td style="color:#e53e3e; font-weight: 700;"><?php echo number_format($item['penalty'], 2); ?></td>
                         <td style="font-weight:900;"><?php echo number_format($item['total'], 2); ?></td>
+                        <?php if (current_user_can('sm_manage_finance')): ?>
+                        <td style="text-align: center;">
+                            <button type="button" class="sm-btn" style="height: 25px; padding: 0 10px; font-size: 10px; width: auto; background: #2c3e50;"
+                                onclick="smSelectForPayment(<?php echo $item['total']; ?>, '<?php echo esc_js($item['item']); ?>')">سداد هذا البند</button>
+                        </td>
+                        <?php endif; ?>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
                 <tfoot>
                     <tr style="background:#f1f5f9; font-weight: 800;">
-                        <td colspan="3">الإجمالي المطلوب</td>
-                        <td style="color:var(--sm-primary-color); font-size:1.1em;"><?php echo number_format($dues['total_owed'], 2); ?> ج.م</td>
+                        <td colspan="3">إجمالي المتأخرات والمستحقات (Fine/Amount Due)</td>
+                        <td colspan="<?php echo current_user_can('sm_manage_finance') ? '2' : '1'; ?>" style="color:var(--sm-primary-color); font-size:1.1em;"><?php echo number_format($dues['total_owed'], 2); ?> ج.م</td>
                     </tr>
                 </tfoot>
             </table>
@@ -110,8 +124,9 @@
                     <thead>
                         <tr>
                             <th>التاريخ</th>
-                            <th>النوع</th>
-                            <th>المبلغ</th>
+                            <th>البيان (Reason)</th>
+                            <th>الحالة</th>
+                            <th>المبلغ المسدد</th>
                             <th>الفاتورة</th>
                         </tr>
                     </thead>
@@ -119,10 +134,10 @@
                         <?php foreach ($history as $p): ?>
                         <tr>
                             <td><?php echo $p->payment_date; ?></td>
-                            <td><?php
-                                $types = ['membership' => 'عضوية', 'license' => 'ترخيص', 'facility' => 'منشأة', 'penalty' => 'غرامة', 'other' => 'أخرى'];
-                                echo $types[$p->payment_type] ?? $p->payment_type;
-                            ?></td>
+                            <td style="font-size:11px;">
+                                <?php echo esc_html($p->details_ar ?: $p->payment_type); ?>
+                            </td>
+                            <td><span class="sm-badge" style="background:#c6f6d5; color:#22543d; font-size:10px;">تم السداد</span></td>
                             <td style="font-weight:700; color:#27ae60;"><?php echo number_format($p->amount, 2); ?></td>
                             <td>
                                 <a href="<?php echo admin_url('admin-ajax.php?action=sm_print_invoice&payment_id='.$p->id); ?>" target="_blank" class="sm-btn" style="height:24px; padding:0 8px; font-size:10px; width:auto; background:#111F35;">عرض الفاتورة</a>
@@ -135,3 +150,23 @@
         </div>
     </div>
 </div>
+
+<script>
+function smSelectForPayment(amount, reason) {
+    const form = document.getElementById('record-payment-form');
+    if (!form) return;
+    form.querySelector('[name="amount"]').value = amount;
+    form.querySelector('[name="details_ar"]').value = reason;
+
+    // Auto-detect type
+    const select = form.querySelector('[name="payment_type"]');
+    if (reason.includes('عضوية')) select.value = 'membership';
+    else if (reason.includes('تصريح')) select.value = 'license';
+    else if (reason.includes('منشأة')) select.value = 'facility';
+
+    // Smooth scroll to form
+    form.scrollIntoView({ behavior: 'smooth' });
+    form.style.boxShadow = '0 0 15px rgba(39, 174, 96, 0.3)';
+    setTimeout(() => form.style.boxShadow = 'none', 2000);
+}
+</script>

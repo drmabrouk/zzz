@@ -126,10 +126,14 @@ $acc_status = SM_Finance::get_member_status($member->id);
                         </div>
                         <div style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px;">
                             <?php if (empty($member->license_number)): ?>
-                                <div style="text-align: center; color: #718096; font-weight: 700; padding: 10px;">غير مقيد (لم يتم إصدار تصريح)</div>
+                                <div style="text-align: center; color: #718096; font-weight: 700; padding: 10px;">غير مقيد - لم يتم إصدار تصريح</div>
                             <?php else: ?>
-                                <label class="sm-label">رقم التصريح:</label> <span style="font-weight:700;"><?php echo esc_html($member->license_number); ?></span><br>
-                                <label class="sm-label">تاريخ الانتهاء:</label> <span style="color: <?php echo $lic_valid ? '#38a169' : '#e53e3e'; ?>; font-weight:700;"><?php echo esc_html($member->license_expiration_date); ?></span>
+                                <div style="display:grid; gap:8px;">
+                                    <div><label class="sm-label">رقم التصريح:</label> <span style="font-weight:700;"><?php echo esc_html($member->license_number); ?></span></div>
+                                    <div><label class="sm-label">تاريخ الإصدار:</label> <span style="font-weight:700;"><?php echo esc_html($member->license_issue_date ?: '---'); ?></span></div>
+                                    <div><label class="sm-label">تاريخ الانتهاء:</label> <span style="color: <?php echo $lic_valid ? '#38a169' : '#e53e3e'; ?>; font-weight:700;"><?php echo esc_html($member->license_expiration_date ?: '---'); ?></span></div>
+                                    <div><label class="sm-label">حالة التجديد:</label> <?php echo $lic_valid ? '<span style="color:#38a169;">مجدد</span>' : '<span style="color:#e53e3e;">مطلوب التجديد</span>'; ?></div>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -137,7 +141,7 @@ $acc_status = SM_Finance::get_member_status($member->id);
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <h4 style="color: #38a169; margin:0;">ترخيص المنشأة</h4>
                             <?php
-                            if ($member->facility_name) {
+                            if (!empty($member->facility_number)) {
                                 $fac_valid = ($member->facility_license_expiration_date && $member->facility_license_expiration_date >= date('Y-m-d'));
                                 echo $fac_valid ? '<span class="sm-badge sm-badge-low" style="background:#def7ec; color:#03543f;">صالح</span>' : '<span class="sm-badge sm-badge-high">منتهي</span>';
                             } else {
@@ -146,8 +150,17 @@ $acc_status = SM_Finance::get_member_status($member->id);
                             ?>
                         </div>
                         <div style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px;">
-                            <label class="sm-label">اسم المنشأة:</label> <span style="font-weight:700;"><?php echo esc_html($member->facility_name ?: 'غير متوفر'); ?></span><br>
-                            <label class="sm-label">تاريخ الانتهاء:</label> <span style="color: <?php echo ($member->facility_name && $fac_valid) ? '#38a169' : '#e53e3e'; ?>; font-weight:700;"><?php echo esc_html($member->facility_license_expiration_date ?: '---'); ?></span>
+                            <?php if (empty($member->facility_number)): ?>
+                                <div style="text-align: center; color: #718096; font-weight: 700; padding: 10px;">غير مقيد - لم يتم إصدار ترخيص</div>
+                            <?php else: ?>
+                                <div style="display:grid; gap:8px;">
+                                    <div><label class="sm-label">اسم المنشأة:</label> <span style="font-weight:700;"><?php echo esc_html($member->facility_name ?: 'غير متوفر'); ?></span></div>
+                                    <div><label class="sm-label">رقم الترخيص:</label> <span style="font-weight:700;"><?php echo esc_html($member->facility_number); ?></span></div>
+                                    <div><label class="sm-label">تاريخ الإصدار:</label> <span style="font-weight:700;"><?php echo esc_html($member->facility_license_issue_date ?: '---'); ?></span></div>
+                                    <div><label class="sm-label">تاريخ الانتهاء:</label> <span style="color: <?php echo $fac_valid ? '#38a169' : '#e53e3e'; ?>; font-weight:700;"><?php echo esc_html($member->facility_license_expiration_date ?: '---'); ?></span></div>
+                                    <div><label class="sm-label">حالة التجديد:</label> <?php echo $fac_valid ? '<span style="color:#38a169;">مجدد</span>' : '<span style="color:#e53e3e;">مطلوب التجديد</span>'; ?></div>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -159,33 +172,18 @@ $acc_status = SM_Finance::get_member_status($member->id);
             <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--sm-border-color); box-shadow: var(--sm-shadow);">
                 <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">الوضع المالي</h3>
                 <div style="text-align: center; padding: 10px 0;">
-                    <div style="font-size: 0.9em; color: #718096;">الرصيد المتبقي</div>
+                    <div style="font-size: 0.9em; color: #718096;">إجمالي المستحق</div>
                     <div style="font-size: 2.2em; font-weight: 900; color: <?php echo $finance['balance'] > 0 ? '#e53e3e' : '#38a169'; ?>;">
                         <?php echo number_format($finance['balance'], 2); ?> ج.م
                     </div>
                 </div>
                 <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between;"><span>إجمالي المستحق:</span> <strong><?php echo number_format($finance['total_owed'], 2); ?></strong></div>
-                    <div style="display: flex; justify-content: space-between;"><span>إجمالي المسدد:</span> <strong style="color:#38a169;"><?php echo number_format($finance['total_paid'], 2); ?></strong></div>
+                    <div style="display: flex; justify-content: space-between;"><span>المبلغ المطلوب سداده:</span> <strong><?php echo number_format($finance['total_owed'], 2); ?></strong></div>
+                    <div style="display: flex; justify-content: space-between;"><span>إجمالي ما تم سداده:</span> <strong style="color:#38a169;"><?php echo number_format($finance['total_paid'], 2); ?></strong></div>
                 </div>
                 <button onclick="smOpenFinanceModal(<?php echo $member->id; ?>)" class="sm-btn" style="margin-top: 20px; background: var(--sm-dark-color);">
-                    <?php echo $is_syndicate_staff ? 'عرض كشف الحساب' : 'إدارة المدفوعات والفواتير'; ?>
+                    <?php echo ($is_syndicate_staff && !current_user_can('sm_manage_finance')) ? 'عرض كشف الحساب' : 'إدارة المدفوعات والفواتير'; ?>
                 </button>
-            </div>
-
-            <!-- Account Status -->
-            <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--sm-border-color); box-shadow: var(--sm-shadow);">
-                <h4 style="margin-top:0;">حالة الحساب</h4>
-                <div style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
-                    <?php
-                    $status_color = (strpos($acc_status, 'نشط') !== false) ? '#38a169' : ((strpos($acc_status, 'سماح') !== false) ? '#d69e2e' : '#e53e3e');
-                    ?>
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background: <?php echo $status_color; ?>;"></div>
-                    <span style="font-weight: 700;"><?php echo $acc_status; ?></span>
-                </div>
-                <div style="font-size: 0.8em; color: #718096; margin-top: 10px;">
-                    تاريخ التسجيل: <?php echo $member->registration_date; ?>
-                </div>
             </div>
         </div>
     </div>

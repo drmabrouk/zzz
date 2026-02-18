@@ -83,18 +83,18 @@ class Syndicate_Management {
     }
 
     public function run() {
-        $this->check_version_updates();
+        add_action('plugins_loaded', array($this, 'check_version_updates'));
+        $this->loader->add_action('init', $this, 'schedule_maintenance_cron');
         $this->loader->run();
-        add_action('init', array($this, 'schedule_maintenance_cron'));
     }
 
     public function schedule_maintenance_cron() {
-        if (!wp_next_scheduled('sm_daily_maintenance')) {
+        if (function_exists('wp_next_scheduled') && !wp_next_scheduled('sm_daily_maintenance')) {
             wp_schedule_event(time(), 'daily', 'sm_daily_maintenance');
         }
     }
 
-    private function check_version_updates() {
+    public function check_version_updates() {
         $db_version = get_option('sm_plugin_version', '1.0.0');
         if (version_compare($db_version, SM_VERSION, '<')) {
             require_once SM_PLUGIN_DIR . 'includes/class-sm-activator.php';

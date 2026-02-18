@@ -50,7 +50,7 @@ class SM_Public {
         $user = wp_get_current_user();
 
         // Members can access their own record
-        if (in_array('sm_member', (array)$user->roles) && $member->wp_user_id == $user->ID) {
+        if (in_array('sm_syndicate_member', (array)$user->roles) && $member->wp_user_id == $user->ID) {
             return true;
         }
 
@@ -872,7 +872,8 @@ class SM_Public {
 
         if (!$member_id) {
             // Try to find member_id from current user if they are a member
-            $member_by_wp = $GLOBALS['wpdb']->get_row($GLOBALS['wpdb']->prepare("SELECT id FROM {$GLOBALS['wpdb']->prefix}sm_members WHERE wp_user_id = %d", $sender_id));
+            global $wpdb;
+            $member_by_wp = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_members WHERE wp_user_id = %d", $sender_id));
             if ($member_by_wp) $member_id = $member_by_wp->id;
         }
 
@@ -907,7 +908,8 @@ class SM_Public {
         $member_id = intval($_POST['member_id'] ?? 0);
         if (!$member_id) {
             $sender_id = get_current_user_id();
-            $member_by_wp = $GLOBALS['wpdb']->get_row($GLOBALS['wpdb']->prepare("SELECT id FROM {$GLOBALS['wpdb']->prefix}sm_members WHERE wp_user_id = %d", $sender_id));
+            global $wpdb;
+            $member_by_wp = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_members WHERE wp_user_id = %d", $sender_id));
             if ($member_by_wp) $member_id = $member_by_wp->id;
         }
 

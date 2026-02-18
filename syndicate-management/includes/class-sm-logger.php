@@ -23,7 +23,7 @@ class SM_Logger {
         }
     }
 
-    public static function get_logs($limit = 100, $offset = 0) {
+    public static function get_logs($limit = 100, $offset = 0, $search = '') {
         global $wpdb;
         $user = wp_get_current_user();
         $is_syndicate_admin = in_array('sm_syndicate_admin', (array)$user->roles);
@@ -31,11 +31,15 @@ class SM_Logger {
 
         $where = "1=1";
         if ($is_syndicate_admin && $my_gov) {
-            // Join with usermeta to check governorate of the user who performed the action OR join with sm_members
             $where = $wpdb->prepare("(
                 EXISTS (SELECT 1 FROM {$wpdb->prefix}usermeta um WHERE um.user_id = l.user_id AND um.meta_key = 'sm_governorate' AND um.meta_value = %s)
                 OR EXISTS (SELECT 1 FROM {$wpdb->prefix}sm_members m WHERE m.wp_user_id = l.user_id AND m.governorate = %s)
             )", $my_gov, $my_gov);
+        }
+
+        if (!empty($search)) {
+            $s = '%' . $wpdb->esc_like($search) . '%';
+            $where .= $wpdb->prepare(" AND (l.action LIKE %s OR l.details LIKE %s OR u.display_name LIKE %s OR l.created_at LIKE %s)", $s, $s, $s, $s);
         }
 
         return $wpdb->get_results($wpdb->prepare(
@@ -45,7 +49,7 @@ class SM_Logger {
         ));
     }
 
-    public static function get_total_logs() {
+    public static function get_total_logs($search = '') {
         global $wpdb;
         $user = wp_get_current_user();
         $is_syndicate_admin = in_array('sm_syndicate_admin', (array)$user->roles);
@@ -57,6 +61,11 @@ class SM_Logger {
                 EXISTS (SELECT 1 FROM {$wpdb->prefix}usermeta um WHERE um.user_id = l.user_id AND um.meta_key = 'sm_governorate' AND um.meta_value = %s)
                 OR EXISTS (SELECT 1 FROM {$wpdb->prefix}sm_members m WHERE m.wp_user_id = l.user_id AND m.governorate = %s)
             )", $my_gov, $my_gov);
+        }
+
+        if (!empty($search)) {
+            $s = '%' . $wpdb->esc_like($search) . '%';
+            $where .= $wpdb->prepare(" AND (l.action LIKE %s OR l.details LIKE %s OR EXISTS (SELECT 1 FROM {$wpdb->base_prefix}users u WHERE u.ID = l.user_id AND u.display_name LIKE %s) OR l.created_at LIKE %s)", $s, $s, $s, $s);
         }
 
         return (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}sm_logs l WHERE $where");

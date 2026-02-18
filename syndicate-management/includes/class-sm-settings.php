@@ -8,12 +8,41 @@ class SM_Settings {
             'secondary_color' => '#D02752',
             'accent_color' => '#8A244B',
             'dark_color' => '#111F35',
+            'bg_color' => '#ffffff',
+            'sidebar_bg_color' => '#f8fafc',
+            'font_color' => '#111F35',
+            'border_color' => '#e2e8f0',
+            'btn_color' => '#111F35',
             'font_size' => '15px',
+            'font_weight' => '400',
+            'line_spacing' => '1.5',
             'border_radius' => '12px',
             'table_style' => 'modern',
             'button_style' => 'flat'
         );
         return wp_parse_args(get_option('sm_appearance', array()), $default);
+    }
+
+    public static function get_labels() {
+        $default = array(
+            'tab_summary' => 'لوحة المعلومات',
+            'tab_members' => 'إدارة الأعضاء',
+            'tab_finance' => 'الاستحقاقات المالية',
+            'tab_financial_logs' => 'سجل العمليات المالية',
+            'tab_practice_licenses' => 'تصاريح مزاولة المهنة',
+            'tab_facility_licenses' => 'تراخيص المنشآت',
+            'tab_staffs' => 'إدارة مستخدمي النظام',
+            'tab_printing' => 'مركز الطباعة',
+            'tab_surveys' => 'استطلاعات الرأي',
+            'tab_global_settings' => 'إعدادات النظام',
+            'tab_update_requests' => 'طلبات التحديث',
+            'tab_my_profile' => 'ملفي الشخصي'
+        );
+        return wp_parse_args(get_option('sm_labels', array()), $default);
+    }
+
+    public static function save_labels($labels) {
+        update_option('sm_labels', $labels);
     }
 
     public static function save_appearance($data) {

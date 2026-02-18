@@ -99,11 +99,14 @@
     };
 
     window.smResetSystem = function() {
-        if (!confirm('تحذير نهائي: هل أنت متأكد من مسح كافة بيانات النظام بالكامل؟ سيتم حذف جميع الأعضاء والعمليات المالية والملفات المرتبطة.')) return;
-        if (!confirm('للتأكيد، هل تريد حقاً البدء في عملية مسح البيانات؟')) return;
+        const password = prompt('تحذير نهائي: سيتم مسح كافة بيانات النظام بالكامل. يرجى إدخال كلمة مرور مدير النظام للتأكيد:');
+        if (!password) return;
+
+        if (!confirm('هل أنت متأكد تماماً؟ لا يمكن التراجع عن هذا الإجراء.')) return;
 
         const fd = new FormData();
         fd.append('action', 'sm_reset_system_ajax');
+        fd.append('admin_password', password);
         fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
 
         fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: fd })
@@ -116,6 +119,34 @@
                 alert('خطأ: ' + res.data);
             }
         });
+    };
+
+    window.smToggleSidebarDropdown = function(element) {
+        const dropdown = element.nextElementSibling;
+        if (dropdown && dropdown.classList.contains('sm-sidebar-dropdown')) {
+            const isVisible = dropdown.style.display === 'block';
+            dropdown.style.display = isVisible ? 'none' : 'block';
+            element.classList.toggle('sm-dropdown-open', !isVisible);
+        }
+    };
+
+    window.smDeleteLog = function(logId) {
+        if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
+        const fd = new FormData();
+        fd.append('action', 'sm_delete_log');
+        fd.append('log_id', logId);
+        fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: fd })
+        .then(r => r.json()).then(res => { if (res.success) location.reload(); });
+    };
+
+    window.smDeleteAllLogs = function() {
+        if (!confirm('هل أنت متأكد من مسح كافة السجلات؟')) return;
+        const fd = new FormData();
+        fd.append('action', 'sm_clear_all_logs');
+        fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: fd })
+        .then(r => r.json()).then(res => { if (res.success) location.reload(); });
     };
 
     window.smOpenMediaUploader = function(inputId) {
@@ -232,6 +263,8 @@ if ($is_restricted && !in_array($active_tab, ['my-profile', 'member-profile', 'm
 }
 
 $syndicate = SM_Settings::get_syndicate_info();
+$labels = SM_Settings::get_labels();
+$appearance = SM_Settings::get_appearance();
 $stats = array();
 
 if ($active_tab === 'summary') {
@@ -243,7 +276,7 @@ $hour = (int)current_time('G');
 $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء الخير';
 ?>
 
-<div class="sm-admin-dashboard" dir="rtl" style="font-family: 'Rubik', sans-serif; background: #fff; border: 1px solid var(--sm-border-color); border-radius: 12px; overflow: hidden;">
+<div class="sm-admin-dashboard" dir="rtl" style="font-family: 'Rubik', sans-serif; background: <?php echo $appearance['bg_color']; ?>; border: 1px solid var(--sm-border-color); border-radius: 12px; overflow: hidden; color: <?php echo $appearance['font_color']; ?>; font-size: <?php echo $appearance['font_size']; ?>; font-weight: <?php echo $appearance['font_weight']; ?>; line-height: <?php echo $appearance['line_spacing']; ?>;">
     <!-- OFFICIAL SYSTEM HEADER -->
     <div class="sm-main-header">
         <div style="display: flex; align-items: center; gap: 20px;">
@@ -405,73 +438,74 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
     <div class="sm-admin-layout" style="display: flex; min-height: 800px;">
         <!-- SIDEBAR -->
         <?php $is_restricted = $is_member || $is_syndicate_member; ?>
-        <div class="sm-sidebar" style="width: 280px; flex-shrink: 0; background: var(--sm-bg-light); border-left: 1px solid var(--sm-border-color); padding: 20px 0;">
+        <div class="sm-sidebar" style="width: 280px; flex-shrink: 0; background: <?php echo $appearance['sidebar_bg_color']; ?>; border-left: 1px solid var(--sm-border-color); padding: 20px 0;">
             <ul style="list-style: none; padding: 0; margin: 0;">
 
                 <?php if (!$is_restricted): ?>
                 <li class="sm-sidebar-item <?php echo $active_tab == 'summary' ? 'sm-active' : ''; ?>">
-                    <a href="<?php echo add_query_arg('sm_tab', 'summary'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-dashboard"></span> لوحة المعلومات</a>
+                    <a href="<?php echo add_query_arg('sm_tab', 'summary'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-dashboard"></span> <?php echo $labels['tab_summary']; ?></a>
                 </li>
                 <?php endif; ?>
 
                 <?php if ($is_restricted): ?>
                     <li class="sm-sidebar-item <?php echo in_array($active_tab, ['my-profile', 'member-profile']) ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'my-profile'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-users"></span> ملفي الشخصي</a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'my-profile'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-users"></span> <?php echo $labels['tab_my_profile']; ?></a>
                     </li>
                 <?php endif; ?>
 
                 <?php if (!$is_restricted && ($is_admin || $is_sys_admin || $is_syndicate_admin)): ?>
-                    <li class="sm-sidebar-item <?php echo $active_tab == 'members' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'members'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-groups"></span> إدارة الأعضاء</a>
-                    </li>
-                    <li class="sm-sidebar-item <?php echo $active_tab == 'update-requests' ? 'sm-active' : ''; ?>" style="position: relative;">
-                        <a href="<?php echo add_query_arg('sm_tab', 'update-requests'); ?>" class="sm-sidebar-link">
-                            <span class="dashicons dashicons-edit"></span> طلبات التحديث
-                            <?php
-                            $pending_count = count(SM_DB::get_update_requests('pending'));
-                            if ($pending_count > 0): ?>
-                                <span class="sm-sidebar-badge"><?php echo $pending_count; ?></span>
-                            <?php endif; ?>
-                        </a>
+                    <li class="sm-sidebar-item <?php echo in_array($active_tab, ['members', 'update-requests']) ? 'sm-active' : ''; ?>">
+                        <a href="javascript:void(0)" onclick="smToggleSidebarDropdown(this)" class="sm-sidebar-link sm-has-dropdown"><span class="dashicons dashicons-groups"></span> <?php echo $labels['tab_members']; ?></a>
+                        <ul class="sm-sidebar-dropdown" style="display: <?php echo in_array($active_tab, ['members', 'update-requests']) ? 'block' : 'none'; ?>;">
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'members'); ?>" class="<?php echo $active_tab == 'members' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-list-view"></span> قائمة الأعضاء</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'update-requests'); ?>" class="<?php echo $active_tab == 'update-requests' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-edit"></span> طلبات التحديث</a></li>
+                        </ul>
                     </li>
                 <?php endif; ?>
 
                 <?php if (!$is_restricted && ($is_admin || $is_sys_admin || $is_syndicate_admin)): ?>
-                    <li class="sm-sidebar-item <?php echo $active_tab == 'finance' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'finance'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-money-alt"></span> الاستحقاقات المالية</a>
+                    <li class="sm-sidebar-item <?php echo in_array($active_tab, ['finance', 'financial-logs']) ? 'sm-active' : ''; ?>">
+                        <a href="javascript:void(0)" onclick="smToggleSidebarDropdown(this)" class="sm-sidebar-link sm-has-dropdown"><span class="dashicons dashicons-money-alt"></span> المحاسبة والمالية</a>
+                        <ul class="sm-sidebar-dropdown" style="display: <?php echo in_array($active_tab, ['finance', 'financial-logs']) ? 'block' : 'none'; ?>;">
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'finance'); ?>" class="<?php echo $active_tab == 'finance' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-calculator"></span> <?php echo $labels['tab_finance']; ?></a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'financial-logs'); ?>" class="<?php echo $active_tab == 'financial-logs' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-media-spreadsheet"></span> <?php echo $labels['tab_financial_logs']; ?></a></li>
+                        </ul>
                     </li>
-                    <li class="sm-sidebar-item <?php echo $active_tab == 'financial-logs' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'financial-logs'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-media-spreadsheet"></span> سجل العمليات المالية</a>
-                    </li>
-                    <li class="sm-sidebar-item <?php echo $active_tab == 'practice-licenses' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'practice-licenses'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-id-alt"></span> تصاريح مزاولة المهنة</a>
-                    </li>
-                    <li class="sm-sidebar-item <?php echo $active_tab == 'facility-licenses' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'facility-licenses'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-building"></span> تراخيص المنشآت</a>
+                    <li class="sm-sidebar-item <?php echo in_array($active_tab, ['practice-licenses', 'facility-licenses']) ? 'sm-active' : ''; ?>">
+                        <a href="javascript:void(0)" onclick="smToggleSidebarDropdown(this)" class="sm-sidebar-link sm-has-dropdown"><span class="dashicons dashicons-id-alt"></span> التراخيص والمنشآت</a>
+                        <ul class="sm-sidebar-dropdown" style="display: <?php echo in_array($active_tab, ['practice-licenses', 'facility-licenses']) ? 'block' : 'none'; ?>;">
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'practice-licenses'); ?>" class="<?php echo $active_tab == 'practice-licenses' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-id-alt"></span> <?php echo $labels['tab_practice_licenses']; ?></a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'facility-licenses'); ?>" class="<?php echo $active_tab == 'facility-licenses' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-building"></span> <?php echo $labels['tab_facility_licenses']; ?></a></li>
+                        </ul>
                     </li>
                 <?php endif; ?>
 
                 <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin): ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'staffs' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'staffs'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-users"></span> إدارة مستخدمي النظام</a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'staffs'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-users"></span> <?php echo $labels['tab_staffs']; ?></a>
                     </li>
                 <?php endif; ?>
 
                 <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin): ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'printing' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'printing'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-printer"></span> مركز الطباعة</a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'printing'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-printer"></span> <?php echo $labels['tab_printing']; ?></a>
                     </li>
                 <?php endif; ?>
 
                 <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin || $is_syndicate_member || $is_member): ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'surveys' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'surveys'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-clipboard"></span> استطلاعات الرأي</a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'surveys'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-clipboard"></span> <?php echo $labels['tab_surveys']; ?></a>
                     </li>
                 <?php endif; ?>
 
                 <?php if ($is_admin || $is_sys_admin): ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'global-settings' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-generic"></span> إعدادات النظام</a>
+                        <a href="javascript:void(0)" onclick="smToggleSidebarDropdown(this)" class="sm-sidebar-link sm-has-dropdown"><span class="dashicons dashicons-admin-generic"></span> <?php echo $labels['tab_global_settings']; ?></a>
+                        <ul class="sm-sidebar-dropdown" style="display: <?php echo $active_tab == 'global-settings' ? 'block' : 'none'; ?>;">
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=init" class="sm-sub-active"><span class="dashicons dashicons-admin-tools"></span> تهيئة النظام</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=design"><span class="dashicons dashicons-art"></span> التصميم والمظهر</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=backup"><span class="dashicons dashicons-database-export"></span> النسخ الاحتياطي</a></li>
+                        </ul>
                     </li>
                 <?php endif; ?>
             </ul>
@@ -564,16 +598,56 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                 case 'global-settings':
                     if ($is_admin || current_user_can('sm_manage_system')) {
+                        $sub = $_GET['sub'] ?? 'init';
                         ?>
                         <div class="sm-tabs-wrapper" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; overflow-x: auto; white-space: nowrap; padding-bottom: 10px;">
-                            <button class="sm-tab-btn sm-active" onclick="smOpenInternalTab('syndicate-settings', this)">السلطة</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'init' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('syndicate-settings', this)">تهيئة النظام</button>
                             <button class="sm-tab-btn" onclick="smOpenInternalTab('professional-settings', this)">الدرجات والتخصصات</button>
-                            <button class="sm-tab-btn" onclick="smOpenInternalTab('design-settings', this)">تصميم النظام</button>
-                            <button class="sm-tab-btn" onclick="smOpenInternalTab('backup-settings', this)">مركز النسخ الاحتياطي</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'design' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('design-settings', this)">التصميم والمظهر</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'backup' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('backup-settings', this)">مركز النسخ الاحتياطي</button>
                             <?php if ($is_admin): ?>
                                 <button class="sm-tab-btn" onclick="smOpenInternalTab('activity-logs', this)">سجل النشاطات</button>
                             <?php endif; ?>
                         </div>
+
+                        <div id="syndicate-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'init' ? 'block' : 'none'; ?>;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+                                <form method="post" style="grid-column: span 2;">
+                                    <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
+                                    <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">بيانات السلطة والنقابة</h4>
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:15px;">
+                                        <div class="sm-form-group"><label class="sm-label">اسم النقابة:</label><input type="text" name="syndicate_name" value="<?php echo esc_attr($syndicate['syndicate_name']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">اسم مسؤول النقابة:</label><input type="text" name="syndicate_officer_name" value="<?php echo esc_attr($syndicate['syndicate_officer_name'] ?? ''); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">رقم الهاتف:</label><input type="text" name="syndicate_phone" value="<?php echo esc_attr($syndicate['phone']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">البريد الإلكتروني:</label><input type="email" name="syndicate_email" value="<?php echo esc_attr($syndicate['email']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group">
+                                            <label class="sm-label">شعار النقابة:</label>
+                                            <div style="display:flex; gap:10px;">
+                                                <input type="text" name="syndicate_logo" id="sm_syndicate_logo_url" value="<?php echo esc_attr($syndicate['syndicate_logo']); ?>" class="sm-input">
+                                                <button type="button" onclick="smOpenMediaUploader('sm_syndicate_logo_url')" class="sm-btn" style="width:auto; font-size:12px; background:var(--sm-secondary-color);">رفع/اختيار</button>
+                                            </div>
+                                        </div>
+                                        <div class="sm-form-group"><label class="sm-label">العنوان:</label><input type="text" name="syndicate_address" value="<?php echo esc_attr($syndicate['address']); ?>" class="sm-input"></div>
+                                    </div>
+                                    <button type="submit" name="sm_save_settings_unified" class="sm-btn" style="width:auto; margin-top:20px;">حفظ بيانات السلطة</button>
+                                </form>
+
+                                <form method="post" style="grid-column: span 2; margin-top:30px; border-top: 1px solid #eee; padding-top:20px;">
+                                    <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
+                                    <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">مسميات أقسام النظام (Dynamic Labels)</h4>
+                                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-top:15px;">
+                                        <?php foreach($labels as $key => $val): ?>
+                                            <div class="sm-form-group">
+                                                <label class="sm-label" style="font-size:11px;"><?php echo str_replace('tab_', '', $key); ?>:</label>
+                                                <input type="text" name="<?php echo $key; ?>" value="<?php echo esc_attr($val); ?>" class="sm-input" style="padding:8px; font-size:12px;">
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <button type="submit" name="sm_save_labels" class="sm-btn" style="width:auto; margin-top:10px; background: #2c3e50;">حفظ المسميات الجديدة</button>
+                                </form>
+                            </div>
+                        </div>
+
                         <div id="professional-settings" class="sm-internal-tab" style="display:none;">
                             <form method="post">
                                 <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
@@ -597,67 +671,30 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             </form>
                         </div>
 
-                        <div id="syndicate-settings" class="sm-internal-tab">
+                        <div id="design-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'design' ? 'block' : 'none'; ?>;">
                             <form method="post">
                                 <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                                    <div class="sm-form-group"><label class="sm-label">اسم النقابة:</label><input type="text" name="syndicate_name" value="<?php echo esc_attr($syndicate['syndicate_name']); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">اسم مسؤول النقابة:</label><input type="text" name="syndicate_officer_name" value="<?php echo esc_attr($syndicate['syndicate_officer_name'] ?? ''); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">رقم الهاتف:</label><input type="text" name="syndicate_phone" value="<?php echo esc_attr($syndicate['phone']); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">البريد الإلكتروني:</label><input type="email" name="syndicate_email" value="<?php echo esc_attr($syndicate['email']); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group">
-                                        <label class="sm-label">شعار النقابة:</label>
-                                        <div style="display:flex; gap:10px;">
-                                            <input type="text" name="syndicate_logo" id="sm_syndicate_logo_url" value="<?php echo esc_attr($syndicate['syndicate_logo']); ?>" class="sm-input">
-                                            <button type="button" onclick="smOpenMediaUploader('sm_syndicate_logo_url')" class="sm-btn" style="width:auto; font-size:12px; background:var(--sm-secondary-color);">رفع/اختيار</button>
-                                        </div>
-                                    </div>
-                                    <div class="sm-form-group" style="grid-column: span 2;"><label class="sm-label">العنوان:</label><input type="text" name="syndicate_address" value="<?php echo esc_attr($syndicate['address']); ?>" class="sm-input"></div>
+                                <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">إعدادات الألوان والمظهر الشاملة</h4>
+                                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-top:20px;">
+                                    <div class="sm-form-group"><label class="sm-label">الأساسي:</label><input type="color" name="primary_color" value="<?php echo esc_attr($appearance['primary_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">الثانوي:</label><input type="color" name="secondary_color" value="<?php echo esc_attr($appearance['secondary_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">التمييز:</label><input type="color" name="accent_color" value="<?php echo esc_attr($appearance['accent_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">الهيدر:</label><input type="color" name="dark_color" value="<?php echo esc_attr($appearance['dark_color']); ?>" class="sm-input" style="height:40px;"></div>
 
-                                    <div class="sm-form-group" style="grid-column: span 2; background: #fffaf0; padding: 20px; border-radius: 8px; border: 1px solid #feebc8; margin-top: 10px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div>
-                                                <h4 style="margin:0; color: #744210;">قسم تصميم النظام</h4>
-                                                <p style="margin: 5px 0 0 0; font-size: 12px; color: #975a16;">يمكنك التحكم في الألوان والخطوط والمظهر العام للنظام من خلال تبويب "تصميم النظام".</p>
-                                            </div>
-                                            <button type="button" onclick="smOpenInternalTab('design-settings', document.querySelector('[onclick*=\"design-settings\"]'))" class="sm-btn" style="width:auto; background:#d69e2e;">انتقل للتصميم</button>
-                                        </div>
-                                    </div>
+                                    <div class="sm-form-group"><label class="sm-label">خلفية النظام:</label><input type="color" name="bg_color" value="<?php echo esc_attr($appearance['bg_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">خلفية السايدبار:</label><input type="color" name="sidebar_bg_color" value="<?php echo esc_attr($appearance['sidebar_bg_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">لون الخط:</label><input type="color" name="font_color" value="<?php echo esc_attr($appearance['font_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">لون الحدود:</label><input type="color" name="border_color" value="<?php echo esc_attr($appearance['border_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                </div>
 
+                                <h4 style="margin-top:30px; border-bottom:1px solid #eee; padding-bottom:10px;">الخطوط والخطوط المطبعية (Typography)</h4>
+                                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-top:20px;">
+                                    <div class="sm-form-group"><label class="sm-label">حجم الخط (مثال: 15px):</label><input type="text" name="font_size" value="<?php echo esc_attr($appearance['font_size']); ?>" class="sm-input"></div>
+                                    <div class="sm-form-group"><label class="sm-label">وزن الخط (400, 700...):</label><input type="text" name="font_weight" value="<?php echo esc_attr($appearance['font_weight']); ?>" class="sm-input"></div>
+                                    <div class="sm-form-group"><label class="sm-label">تباعد الأسطر (1.5...):</label><input type="text" name="line_spacing" value="<?php echo esc_attr($appearance['line_spacing']); ?>" class="sm-input"></div>
                                 </div>
-                                <button type="submit" name="sm_save_settings_unified" class="sm-btn" style="width:auto; margin-top:20px;">حفظ الإعدادات</button>
-                            </form>
-                        </div>
-                        <div id="design-settings" class="sm-internal-tab" style="display:none;">
-                            <form method="post">
-                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); $appearance = SM_Settings::get_appearance(); ?>
-                                <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">إعدادات الألوان والمظهر</h4>
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
-                                    <div class="sm-form-group"><label class="sm-label">اللون الأساسي (#F63049):</label><input type="color" name="primary_color" value="<?php echo esc_attr($appearance['primary_color'] ?? '#F63049'); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">اللون الثانوي (#D02752):</label><input type="color" name="secondary_color" value="<?php echo esc_attr($appearance['secondary_color'] ?? '#D02752'); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">لون التمييز (#8A244B):</label><input type="color" name="accent_color" value="<?php echo esc_attr($appearance['accent_color'] ?? '#8A244B'); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">لون الهيدر (#111F35):</label><input type="color" name="dark_color" value="<?php echo esc_attr($appearance['dark_color'] ?? '#111F35'); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">حجم الخط (بكسل):</label><input type="text" name="font_size" value="<?php echo esc_attr($appearance['font_size'] ?? '15px'); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">نصف قطر الزوايا (بكسل):</label><input type="text" name="border_radius" value="<?php echo esc_attr($appearance['border_radius'] ?? '12px'); ?>" class="sm-input"></div>
-                                </div>
-                                <h4 style="margin-top:20px; border-bottom:1px solid #eee; padding-bottom:10px;">مكونات واجهة المستخدم</h4>
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
-                                    <div class="sm-form-group">
-                                        <label class="sm-label">نمط الجداول:</label>
-                                        <select name="table_style" class="sm-select">
-                                            <option value="modern" <?php selected($appearance['table_style'] ?? '', 'modern'); ?>>عصري - بدون حدود</option>
-                                            <option value="classic" <?php selected($appearance['table_style'] ?? '', 'classic'); ?>>كلاسيكي - بحدود كاملة</option>
-                                        </select>
-                                    </div>
-                                    <div class="sm-form-group">
-                                        <label class="sm-label">نمط الأزرار:</label>
-                                        <select name="button_style" class="sm-select">
-                                            <option value="flat" <?php selected($appearance['button_style'] ?? '', 'flat'); ?>>مسطح (Flat)</option>
-                                            <option value="gradient" <?php selected($appearance['button_style'] ?? '', 'gradient'); ?>>متدرج (Gradient)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <button type="submit" name="sm_save_appearance" class="sm-btn" style="width:auto;">حفظ تصميم النظام</button>
+
+                                <button type="submit" name="sm_save_appearance" class="sm-btn" style="width:auto; margin-top:20px;">حفظ كافة تعديلات التصميم</button>
                             </form>
                         </div>
 
@@ -722,48 +759,61 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                         </div>
                         <?php if ($is_admin): ?>
                         <div id="activity-logs" class="sm-internal-tab" style="display:none;">
-                            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:30px;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:15px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                                     <div>
-                                        <h4 style="margin:0;">سجل نشاطات النظام الشامل</h4>
-                                        <div style="font-size:12px; color:#718096; margin-top:5px;">يتم الاحتفاظ بآخر 200 نشاط فقط تلقائياً.</div>
+                                        <h4 style="margin:0; font-size:16px;">سجل نشاطات النظام الشامل</h4>
+                                        <div style="font-size:11px; color:#718096;">آخر 200 نشاط مسجل في النظام.</div>
                                     </div>
-                                    <button onclick="smDeleteAllLogs()" class="sm-btn" style="background:#e53e3e; width:auto; font-size:12px;">مسح كافة النشاطات</button>
+                                    <div style="display:flex; gap:10px;">
+                                        <form method="get" style="display:flex; gap:5px;">
+                                            <input type="hidden" name="sm_tab" value="global-settings">
+                                            <input type="text" name="log_search" value="<?php echo esc_attr($_GET['log_search'] ?? ''); ?>" placeholder="بحث في السجلات..." class="sm-input" style="width:200px; padding:5px 10px; font-size:12px;">
+                                            <button type="submit" class="sm-btn" style="width:auto; padding:5px 15px; font-size:12px;">بحث</button>
+                                        </form>
+                                        <button onclick="smDeleteAllLogs()" class="sm-btn" style="background:#e53e3e; width:auto; font-size:12px; padding:5px 15px;">تفريغ السجل</button>
+                                    </div>
                                 </div>
-                                <div class="sm-table-container">
-                                    <table class="sm-table">
+                                <div class="sm-table-container" style="margin:0; overflow-x:auto;">
+                                    <table class="sm-table" style="font-size:12px; width:100%;">
                                         <thead>
-                                            <tr>
-                                                <th>الوقت</th>
-                                                <th>المستخدم</th>
-                                                <th>الإجراء</th>
-                                                <th>التفاصيل</th>
-                                                <th>الإجراءات</th>
+                                            <tr style="background:#f8fafc;">
+                                                <th style="padding:8px; width:140px;">الوقت</th>
+                                                <th style="padding:8px; width:120px;">المستخدم</th>
+                                                <th style="padding:8px; width:120px;">الإجراء</th>
+                                                <th style="padding:8px;">التفاصيل</th>
+                                                <th style="padding:8px; width:100px;">إجراءات</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $limit = 20;
+                                            $limit = 25;
                                             $page_num = isset($_GET['log_page']) ? max(1, intval($_GET['log_page'])) : 1;
                                             $offset = ($page_num - 1) * $limit;
-                                            $all_logs = SM_Logger::get_logs($limit, $offset);
-                                            $total_logs = SM_Logger::get_total_logs();
+                                            $search = sanitize_text_field($_GET['log_search'] ?? '');
+                                            $all_logs = SM_Logger::get_logs($limit, $offset, $search);
+                                            $total_logs = SM_Logger::get_total_logs($search);
                                             $total_pages = ceil($total_logs / $limit);
+
+                                            if (empty($all_logs)): ?>
+                                                <tr><td colspan="5" style="text-align:center; padding:20px; color:#94a3b8;">لا توجد سجلات تطابق البحث</td></tr>
+                                            <?php endif;
 
                                             foreach ($all_logs as $log):
                                                 $can_rollback = strpos($log->details, 'ROLLBACK_DATA:') === 0;
-                                                $details_display = $can_rollback ? 'بيانات مستعادة' : esc_html($log->details);
+                                                $details_display = $can_rollback ? 'بيانات قابلة للاستعادة' : esc_html($log->details);
                                             ?>
-                                                <tr>
-                                                    <td style="font-size: 0.85em; color: #718096;"><?php echo esc_html($log->created_at); ?></td>
-                                                    <td style="font-weight: 600;">
-                                                        <?php echo esc_html($log->display_name ?: 'مستخدم غير معروف'); ?>
-                                                    </td>
-                                                    <td style="font-weight:700; color:var(--sm-primary-color);"><?php echo esc_html($log->action); ?></td>
-                                                    <td style="font-size:0.9em;"><?php echo $details_display; ?></td>
-                                                    <td>
-                                                        <div style="display:flex; gap:8px;">
-                                                            <span style="font-size:11px; color:#718096;">لا يوجد إجراءات</span>
+                                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                                    <td style="padding:6px 8px; color: #718096;"><?php echo esc_html($log->created_at); ?></td>
+                                                    <td style="padding:6px 8px; font-weight: 600;"><?php echo esc_html($log->display_name ?: 'نظام'); ?></td>
+                                                    <td style="padding:6px 8px;"><span style="background:<?php echo $appearance['primary_color']; ?>15; color:<?php echo $appearance['primary_color']; ?>; padding:2px 6px; border-radius:4px; font-weight:700;"><?php echo esc_html($log->action); ?></span></td>
+                                                    <td style="padding:6px 8px; color:#4a5568; line-height:1.4;"><?php echo $details_display; ?></td>
+                                                    <td style="padding:6px 8px;">
+                                                        <div style="display:flex; gap:5px;">
+                                                            <?php if ($can_rollback): ?>
+                                                                <button class="sm-btn" style="padding:2px 8px; font-size:10px; background:#38a169;">استعادة</button>
+                                                            <?php endif; ?>
+                                                            <button onclick="smDeleteLog(<?php echo $log->id; ?>)" class="sm-btn" style="padding:2px 8px; font-size:10px; background:#e53e3e;">حذف</button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -832,6 +882,24 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
     background: #e53e3e; color: white; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 800;
 }
 
+.sm-sidebar-dropdown {
+    list-style: none; padding: 0; margin: 0 10px; background: rgba(0,0,0,0.02); display: none; border-radius: 8px;
+}
+.sm-sidebar-dropdown li a {
+    display: flex; align-items: center; gap: 10px; padding: 10px 40px;
+    font-size: 12px; color: #718096 !important; text-decoration: none !important;
+    transition: 0.2s; border-right: 3px solid transparent;
+}
+.sm-sidebar-dropdown li a:hover, .sm-sidebar-dropdown li a.sm-sub-active {
+    color: var(--sm-primary-color) !important; background: #fff; border-right-color: var(--sm-primary-color);
+}
+.sm-sidebar-dropdown li a .dashicons { font-size: 14px; width: 14px; height: 14px; }
+
+.sm-has-dropdown::after {
+    content: "\f347"; font-family: dashicons; position: absolute; left: 20px; font-size: 14px; transition: 0.3s;
+}
+.sm-dropdown-open::after { transform: rotate(180deg); }
+
 .sm-dropdown-item {
     display: flex;
     align-items: center;
@@ -869,6 +937,10 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 }
 .sm-header-circle-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); color: var(--sm-primary-color); }
 .sm-header-circle-icon .dashicons { font-size: 20px; width: 20px; height: 20px; }
+
+.sm-admin-dashboard .sm-btn { background-color: <?php echo $appearance['btn_color']; ?>; }
+.sm-admin-dashboard .sm-table th { border-color: <?php echo $appearance['border_color']; ?>; }
+.sm-admin-dashboard .sm-input, .sm-admin-dashboard .sm-select, .sm-admin-dashboard .sm-textarea { border-color: <?php echo $appearance['border_color']; ?>; }
 
 .sm-icon-badge {
     position: absolute; top: -5px; right: -5px; color: white; border-radius: 50%;

@@ -866,19 +866,64 @@ class SM_Public {
     public function ajax_send_message() {
         if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
         check_ajax_referer('sm_message_action', 'sm_message_nonce');
+
         $sender_id = get_current_user_id();
-        $receiver_id = intval($_POST['receiver_id']);
-        $message = sanitize_textarea_field($_POST['message']);
-        SM_DB::send_message($sender_id, $receiver_id, $message);
+        $member_id = intval($_POST['member_id'] ?? 0);
+
+        if (!$member_id) {
+            // Try to find member_id from current user if they are a member
+            $member_by_wp = $GLOBALS['wpdb']->get_row($GLOBALS['wpdb']->prepare("SELECT id FROM {$GLOBALS['wpdb']->prefix}sm_members WHERE wp_user_id = %d", $sender_id));
+            if ($member_by_wp) $member_id = $member_by_wp->id;
+        }
+
+        if (!$this->can_access_member($member_id)) wp_send_json_error('Access denied');
+
+        $member = SM_DB::get_member_by_id($member_id);
+        $message = sanitize_textarea_field($_POST['message'] ?? '');
+        $receiver_id = intval($_POST['receiver_id'] ?? 0);
+        $governorate = $member->governorate;
+
+        $file_url = null;
+        if (!empty($_FILES['message_file']['name'])) {
+            require_once(ABSPATH . 'wp-admin/includes/file.php');
+            require_once(ABSPATH . 'wp-admin/includes/image.php');
+            require_once(ABSPATH . 'wp-admin/includes/media.php');
+            $attachment_id = media_handle_upload('message_file', 0);
+            if (!is_wp_error($attachment_id)) {
+                $file_url = wp_get_attachment_url($attachment_id);
+            }
+        }
+
+        SM_DB::send_message($sender_id, $receiver_id, $message, $member_id, $file_url, $governorate);
         wp_send_json_success();
     }
 
     public function ajax_get_conversation() {
         if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
         check_ajax_referer('sm_message_action', 'nonce');
-        $user1 = get_current_user_id();
-        $user2 = intval($_POST['other_user_id']);
-        wp_send_json_success(SM_DB::get_conversation_messages($user1, $user2));
+
+        $member_id = intval($_POST['member_id'] ?? 0);
+        if (!$member_id) {
+            $sender_id = get_current_user_id();
+            $member_by_wp = $GLOBALS['wpdb']->get_row($GLOBALS['wpdb']->prepare("SELECT id FROM {$GLOBALS['wpdb']->prefix}sm_members WHERE wp_user_id = %d", $sender_id));
+            if ($member_by_wp) $member_id = $member_by_wp->id;
+        }
+
+        if (!$this->can_access_member($member_id)) wp_send_json_error('Access denied');
+
+        wp_send_json_success(SM_DB::get_ticket_messages($member_id));
+    }
+
+    public function ajax_get_conversations() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_message_action', 'nonce');
+
+        $user = wp_get_current_user();
+        $gov = get_user_meta($user->ID, 'sm_governorate', true);
+
+        if (!$gov && !current_user_can('manage_options')) wp_send_json_error('No governorate assigned');
+
+        wp_send_json_success(SM_DB::get_governorate_conversations($gov));
     }
 
     public function ajax_mark_read() {

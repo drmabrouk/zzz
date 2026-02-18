@@ -155,6 +155,24 @@
         }
     };
 
+    window.smOpenFinanceModal = function(memberId) {
+        const modal = document.getElementById('sm-finance-member-modal');
+        const body = document.getElementById('sm-finance-modal-body');
+        if (!modal || !body) return;
+        modal.style.display = 'flex';
+        body.innerHTML = '<div style="text-align:center; padding: 40px;">جاري تحميل البيانات...</div>';
+
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=sm_get_member_finance_html&member_id=' + memberId)
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                body.innerHTML = res.data.html;
+            } else {
+                body.innerHTML = '<div style="color:red; text-align:center; padding:20px;">' + res.data + '</div>';
+            }
+        });
+    };
+
     window.smEditProfile = function() {
         document.getElementById('sm-profile-view').style.display = 'none';
         document.getElementById('sm-profile-edit').style.display = 'block';
@@ -279,20 +297,21 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                 </div>
             <?php endif; ?>
 
-            <div style="display: flex; gap: 20px; align-items: center; border-left: 1px solid var(--sm-border-color); padding-left: 20px;">
-                <a href="<?php echo add_query_arg('sm_tab', 'messaging'); ?>" class="sm-header-nav-link" title="المراسلات والشكاوى" style="color: var(--sm-dark-color); text-decoration: none; position: relative; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px;">
-                    <span class="dashicons dashicons-email" style="font-size: 20px; width: 20px; height: 20px;"></span>
-                    <span class="sm-hide-mobile">المراسلات والشكاوى</span>
+            <div style="display: flex; gap: 15px; align-items: center; border-left: 1px solid var(--sm-border-color); padding-left: 20px;">
+                <!-- Messages Icon -->
+                <a href="<?php echo add_query_arg('sm_tab', 'messaging'); ?>" class="sm-header-circle-icon" title="المراسلات والشكاوى">
+                    <span class="dashicons dashicons-email"></span>
                     <?php
                     $unread_msgs = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}sm_messages WHERE receiver_id = %d AND is_read = 0", $user->ID));
                     if ($unread_msgs > 0): ?>
-                        <span style="position: absolute; top: -5px; right: -5px; background: #e53e3e; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid white;"><?php echo $unread_msgs; ?></span>
+                        <span class="sm-icon-badge" style="background: #e53e3e;"><?php echo $unread_msgs; ?></span>
                     <?php endif; ?>
                 </a>
 
+                <!-- Notifications Icon -->
                 <div class="sm-notifications-dropdown" style="position: relative;">
-                    <a href="javascript:void(0)" onclick="smToggleNotifications()" title="التنبيهات" style="color: var(--sm-dark-color); text-decoration: none; position: relative;">
-                        <span class="dashicons dashicons-bell" style="font-size: 20px;"></span>
+                    <a href="javascript:void(0)" onclick="smToggleNotifications()" class="sm-header-circle-icon" title="التنبيهات">
+                        <span class="dashicons dashicons-bell"></span>
                         <?php
                         // Simple dynamic alerts for notifications
                         $alerts = [];
@@ -311,7 +330,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             }
                         }
                         if (count($alerts) > 0): ?>
-                            <span style="position: absolute; top: -5px; right: -5px; background: #f6ad55; color: white; border-radius: 50%; width: 10px; height: 10px; border: 2px solid white;"></span>
+                            <span class="sm-icon-dot" style="background: #f6ad55;"></span>
                         <?php endif; ?>
                     </a>
                     <div id="sm-notifications-menu" style="display: none; position: absolute; top: 150%; left: 0; background: white; border: 1px solid var(--sm-border-color); border-radius: 8px; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; padding: 15px;">
@@ -777,6 +796,18 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
     </div>
 </div>
 
+<!-- Global Detailed Finance Modal -->
+<div id="sm-finance-member-modal" class="sm-modal-overlay">
+    <div class="sm-modal-content" style="max-width: 900px;">
+        <div class="sm-modal-header">
+            <h3>التفاصيل المالية للعضو</h3>
+            <button class="sm-modal-close" onclick="document.getElementById('sm-finance-member-modal').style.display='none'">&times;</button>
+        </div>
+        <div id="sm-finance-modal-body" style="padding: 20px;">
+            <div style="text-align:center; padding: 40px;">جاري تحميل البيانات...</div>
+        </div>
+    </div>
+</div>
 
 <style>
 .sm-sidebar-item { border-bottom: 1px solid #e2e8f0; transition: 0.2s; }
@@ -829,7 +860,26 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 .sm-refresh-btn { background: #718096; color: white; padding: 8px 15px; border-radius: 6px; font-size: 13px; border: none; cursor: pointer; }
 .sm-logout-btn { background: #e53e3e; color: white; padding: 8px 15px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: 700; display: inline-block; }
 
-.sm-header-nav-link:hover { color: var(--sm-primary-color) !important; }
+.sm-header-circle-icon {
+    width: 40px; height: 40px; background: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--sm-dark-color); text-decoration: none; position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid var(--sm-border-color);
+    transition: 0.3s;
+}
+.sm-header-circle-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); color: var(--sm-primary-color); }
+.sm-header-circle-icon .dashicons { font-size: 20px; width: 20px; height: 20px; }
+
+.sm-icon-badge {
+    position: absolute; top: -5px; right: -5px; color: white; border-radius: 50%;
+    width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center;
+    justify-content: center; font-weight: 800; border: 2px solid white;
+}
+.sm-icon-dot {
+    position: absolute; top: 0; right: 0; width: 10px; height: 10px;
+    border-radius: 50%; border: 2px solid white;
+}
+
 @media (max-width: 992px) {
     .sm-hide-mobile { display: none; }
 }

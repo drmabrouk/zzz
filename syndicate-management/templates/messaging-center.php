@@ -57,8 +57,8 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
         </div>
 
         <!-- Chat Header -->
-        <div id="sm-msg-header" style="display: none; padding: 15px 30px; border-bottom: 1px solid #f0f2f5; background: #fff; z-index: 10;">
-            <div style="display: flex; align-items: center; gap: 15px;">
+        <div id="sm-msg-header" style="display: none; padding: 15px 30px; border-bottom: 1px solid #f0f2f5; background: #fff; z-index: 10; min-height: 80px; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
                 <button id="sm-msg-back" class="sm-mobile-only" style="background:none; border:none; color:var(--sm-primary-color); cursor:pointer;"><span class="dashicons dashicons-arrow-right-alt2"></span></button>
                 <div id="sm-header-avatar" style="width: 45px; height: 45px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid var(--sm-primary-color);"></div>
                 <div style="flex: 1;">
@@ -126,16 +126,21 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
 .sm-conv-last { font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .sm-msg-bubble { max-width: 80%; padding: 12px 18px; border-radius: 18px; font-size: 14px; line-height: 1.6; position: relative; margin-bottom: 5px; }
-.sm-msg-sent { align-self: flex-start; background: var(--sm-primary-color); color: #fff; border-bottom-right-radius: 4px; }
-.sm-msg-received { align-self: flex-end; background: #fff; color: var(--sm-dark-color); border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; }
+.sm-msg-sent { align-self: flex-end; background: var(--sm-primary-color); color: #fff; border-bottom-left-radius: 4px; }
+.sm-msg-received { align-self: flex-start; background: #fff; color: var(--sm-dark-color); border-bottom-right-radius: 4px; border: 1px solid #e2e8f0; }
 .sm-msg-meta { font-size: 10px; margin-top: 5px; opacity: 0.7; display: flex; align-items: center; gap: 4px; }
-.sm-msg-sent .sm-msg-meta { justify-content: flex-start; }
-.sm-msg-received .sm-msg-meta { justify-content: flex-end; }
+.sm-msg-sent .sm-msg-meta { justify-content: flex-end; }
+.sm-msg-received .sm-msg-meta { justify-content: flex-start; }
 
 .sm-file-card { display: block; margin-top: 10px; padding: 12px; background: rgba(0,0,0,0.05); border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); text-decoration: none !important; color: inherit !important; }
 .sm-msg-sent .sm-file-card { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
 
 #sm-msg-input:focus { border-color: var(--sm-primary-color); outline: none; box-shadow: 0 0 0 3px rgba(246, 48, 73, 0.1); background: #fff; }
+
+.sm-msg-bubble {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    clear: both;
+}
 
 .sm-pulse { animation: sm-pulse-red 2s infinite; }
 @keyframes sm-pulse-red { 0% { box-shadow: 0 0 0 0 rgba(246, 48, 73, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(246, 48, 73, 0); } 100% { box-shadow: 0 0 0 0 rgba(246, 48, 73, 0); } }
@@ -154,6 +159,7 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
 (function($) {
     let currentActiveMemberId = null;
     let pollInterval = null;
+    let fetchingMessages = false;
     const isOfficial = <?php echo $is_official ? 'true' : 'false'; ?>;
     const myId = <?php echo $my_id; ?>;
     const myMemberId = <?php echo $member_id; ?>;
@@ -309,6 +315,9 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
     });
 
     window.fetchMessages = function(memberId, isPolling = false) {
+        if (fetchingMessages) return;
+        fetchingMessages = true;
+
         const body = $('#sm-msg-body');
         if (!isPolling) body.html('<div style="text-align:center; padding:50px;"><div class="sm-loader-mini"></div></div>');
 
@@ -320,6 +329,7 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
         fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
         .then(r => r.json())
         .then(res => {
+            fetchingMessages = false;
             if (res.success) {
                 let html = '';
                 res.data.forEach(m => {
@@ -371,7 +381,7 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
 
         const formData = new FormData(this);
         formData.append('action', 'sm_send_message_ajax');
-        formData.append('sm_message_nonce', '<?php echo wp_create_nonce("sm_message_action"); ?>');
+        formData.append('nonce', '<?php echo wp_create_nonce("sm_message_action"); ?>');
 
         fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
         .then(r => r.json())
@@ -380,8 +390,14 @@ $gov_label = SM_Settings::get_governorates()[$my_gov] ?? $my_gov;
             if (res.success) {
                 input.val('').css('height', '50px');
                 clearFile();
+                fetchingMessages = false;
                 fetchMessages($('#sm_chat_member_id').val());
             } else alert('خطأ: ' + res.data);
+        })
+        .catch(err => {
+            btn.prop('disabled', false).css('opacity', '1');
+            fetchingMessages = false;
+            console.error(err);
         });
     });
 

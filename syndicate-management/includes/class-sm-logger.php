@@ -26,11 +26,12 @@ class SM_Logger {
     public static function get_logs($limit = 100, $offset = 0, $search = '') {
         global $wpdb;
         $user = wp_get_current_user();
-        $is_syndicate_admin = in_array('sm_syndicate_admin', (array)$user->roles);
+        $is_officer = in_array('sm_syndicate_admin', (array)$user->roles) || in_array('sm_syndicate_member', (array)$user->roles);
+        $has_full_access = current_user_can('sm_full_access') || current_user_can('manage_options');
         $my_gov = get_user_meta($user->ID, 'sm_governorate', true);
 
         $where = "1=1";
-        if ($is_syndicate_admin && $my_gov) {
+        if ($is_officer && !$has_full_access && $my_gov) {
             $where = $wpdb->prepare("(
                 EXISTS (SELECT 1 FROM {$wpdb->prefix}usermeta um WHERE um.user_id = l.user_id AND um.meta_key = 'sm_governorate' AND um.meta_value = %s)
                 OR EXISTS (SELECT 1 FROM {$wpdb->prefix}sm_members m WHERE m.wp_user_id = l.user_id AND m.governorate = %s)
@@ -52,11 +53,12 @@ class SM_Logger {
     public static function get_total_logs($search = '') {
         global $wpdb;
         $user = wp_get_current_user();
-        $is_syndicate_admin = in_array('sm_syndicate_admin', (array)$user->roles);
+        $is_officer = in_array('sm_syndicate_admin', (array)$user->roles) || in_array('sm_syndicate_member', (array)$user->roles);
+        $has_full_access = current_user_can('sm_full_access') || current_user_can('manage_options');
         $my_gov = get_user_meta($user->ID, 'sm_governorate', true);
 
         $where = "1=1";
-        if ($is_syndicate_admin && $my_gov) {
+        if ($is_officer && !$has_full_access && $my_gov) {
             $where = $wpdb->prepare("(
                 EXISTS (SELECT 1 FROM {$wpdb->prefix}usermeta um WHERE um.user_id = l.user_id AND um.meta_key = 'sm_governorate' AND um.meta_value = %s)
                 OR EXISTS (SELECT 1 FROM {$wpdb->prefix}sm_members m WHERE m.wp_user_id = l.user_id AND m.governorate = %s)

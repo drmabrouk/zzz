@@ -1017,8 +1017,9 @@ class SM_Public {
 
         $user = wp_get_current_user();
         $gov = get_user_meta($user->ID, 'sm_governorate', true);
+        $has_full_access = current_user_can('sm_full_access') || current_user_can('manage_options');
 
-        if (!$gov && !current_user_can('manage_options')) wp_send_json_error('No governorate assigned');
+        if (!$gov && !$has_full_access) wp_send_json_error('No governorate assigned');
 
         if (in_array('sm_syndicate_member', (array)$user->roles)) {
              // Members see officials of their governorate
@@ -1036,7 +1037,9 @@ class SM_Public {
              wp_send_json_success(['type' => 'member_view', 'officials' => $data]);
         } else {
              // Officials see members' tickets
-             $conversations = SM_DB::get_governorate_conversations($gov);
+             // If System Admin/WP Admin, pass null to see all governorates
+             $target_gov = $has_full_access ? null : $gov;
+             $conversations = SM_DB::get_governorate_conversations($target_gov);
              foreach($conversations as &$c) {
                  $c['member']->avatar = $c['member']->photo_url ?: get_avatar_url($c['member']->wp_user_id ?: 0);
              }

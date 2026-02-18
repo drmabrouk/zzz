@@ -314,17 +314,28 @@ class SM_DB {
         ));
     }
 
-    public static function get_governorate_conversations($governorate) {
+    public static function get_governorate_conversations($governorate = null) {
         global $wpdb;
         $table = $wpdb->prefix . 'sm_messages';
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT member_id, MAX(created_at) as last_activity
-             FROM $table
-             WHERE governorate = %s
-             GROUP BY member_id
-             ORDER BY last_activity DESC",
-            $governorate
-        ));
+
+        $where = "1=1";
+        $params = [];
+        if (!empty($governorate)) {
+            $where = "governorate = %s";
+            $params[] = $governorate;
+        }
+
+        $query = "SELECT member_id, MAX(created_at) as last_activity
+                  FROM $table
+                  WHERE $where
+                  GROUP BY member_id
+                  ORDER BY last_activity DESC";
+
+        if (!empty($params)) {
+            $results = $wpdb->get_results($wpdb->prepare($query, $params));
+        } else {
+            $results = $wpdb->get_results($query);
+        }
 
         $conversations = [];
         foreach ($results as $row) {
@@ -406,11 +417,12 @@ class SM_DB {
         $stats = array();
 
         $user = wp_get_current_user();
-        $is_syndicate_admin = in_array('sm_syndicate_admin', (array)$user->roles);
+        $is_officer = in_array('sm_syndicate_admin', (array)$user->roles) || in_array('sm_syndicate_member', (array)$user->roles);
+        $has_full_access = current_user_can('sm_full_access') || current_user_can('manage_options');
         $my_gov = get_user_meta($user->ID, 'sm_governorate', true);
 
         $where_member = "1=1";
-        if ($is_syndicate_admin && $my_gov) {
+        if ($is_officer && !$has_full_access && $my_gov) {
             $where_member = $wpdb->prepare("governorate = %s", $my_gov);
         }
 
@@ -420,7 +432,7 @@ class SM_DB {
         // Total Revenue
         $join_member_rev = "";
         $where_rev = "1=1";
-        if ($is_syndicate_admin && $my_gov) {
+        if ($is_officer && !$has_full_access && $my_gov) {
             $join_member_rev = "JOIN {$wpdb->prefix}sm_members m ON p.member_id = m.id";
             $where_rev = $wpdb->prepare("m.governorate = %s", $my_gov);
         }
@@ -429,7 +441,7 @@ class SM_DB {
         // Financial Trends (Last 30 Days)
         $join_member = "";
         $where_finance = "payment_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
-        if ($is_syndicate_admin && $my_gov) {
+        if ($is_officer && !$has_full_access && $my_gov) {
             $join_member = "JOIN {$wpdb->prefix}sm_members m ON p.member_id = m.id";
             $where_finance .= $wpdb->prepare(" AND m.governorate = %s", $my_gov);
         }
@@ -539,11 +551,12 @@ class SM_DB {
         if (!$survey) return array();
 
         $user = wp_get_current_user();
-        $is_syndicate_admin = in_array('sm_syndicate_admin', (array)$user->roles);
+        $is_officer = in_array('sm_syndicate_admin', (array)$user->roles) || in_array('sm_syndicate_member', (array)$user->roles);
+        $has_full_access = current_user_can('sm_full_access') || current_user_can('manage_options');
         $my_gov = get_user_meta($user->ID, 'sm_governorate', true);
 
         $where = $wpdb->prepare("survey_id = %d", $survey_id);
-        if ($is_syndicate_admin && $my_gov) {
+        if ($is_officer && !$has_full_access && $my_gov) {
             $where .= $wpdb->prepare(" AND (
                 EXISTS (SELECT 1 FROM {$wpdb->prefix}usermeta um WHERE um.user_id = user_id AND um.meta_key = 'sm_governorate' AND um.meta_value = %s)
                 OR EXISTS (SELECT 1 FROM {$wpdb->prefix}sm_members m WHERE m.wp_user_id = user_id AND m.governorate = %s)
@@ -583,11 +596,12 @@ class SM_DB {
     public static function get_update_requests($status = 'pending') {
         global $wpdb;
         $user = wp_get_current_user();
-        $is_syndicate_admin = in_array('sm_syndicate_admin', (array)$user->roles);
+        $is_officer = in_array('sm_syndicate_admin', (array)$user->roles) || in_array('sm_syndicate_member', (array)$user->roles);
+        $has_full_access = current_user_can('sm_full_access') || current_user_can('manage_options');
         $my_gov = get_user_meta($user->ID, 'sm_governorate', true);
 
         $where = $wpdb->prepare("r.status = %s", $status);
-        if ($is_syndicate_admin && $my_gov) {
+        if ($is_officer && !$has_full_access && $my_gov) {
             $where .= $wpdb->prepare(" AND m.governorate = %s", $my_gov);
         }
 

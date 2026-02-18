@@ -304,10 +304,11 @@ class SM_DB {
     public static function get_governorate_conversations($governorate) {
         global $wpdb;
         $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT DISTINCT member_id
+            "SELECT member_id, MAX(created_at) as last_activity
              FROM {$wpdb->prefix}sm_messages
              WHERE governorate = %s
-             ORDER BY created_at DESC",
+             GROUP BY member_id
+             ORDER BY last_activity DESC",
             $governorate
         ));
 

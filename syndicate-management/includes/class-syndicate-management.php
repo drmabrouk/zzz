@@ -85,6 +85,13 @@ class Syndicate_Management {
     public function run() {
         $this->check_version_updates();
         $this->loader->run();
+        add_action('init', array($this, 'schedule_maintenance_cron'));
+    }
+
+    public function schedule_maintenance_cron() {
+        if (!wp_next_scheduled('sm_daily_maintenance')) {
+            wp_schedule_event(time(), 'daily', 'sm_daily_maintenance');
+        }
     }
 
     private function check_version_updates() {

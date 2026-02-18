@@ -157,7 +157,7 @@ class SM_Activator {
     }
 
     private static function setup_cron() {
-        if (!wp_next_scheduled('sm_daily_maintenance')) {
+        if (function_exists('wp_next_scheduled') && !wp_next_scheduled('sm_daily_maintenance')) {
             wp_schedule_event(time(), 'daily', 'sm_daily_maintenance');
         }
     }

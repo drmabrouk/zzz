@@ -879,6 +879,8 @@ class SM_Public {
         if (!$this->can_access_member($member_id)) wp_send_json_error('Access denied');
 
         $member = SM_DB::get_member_by_id($member_id);
+        if (!$member) wp_send_json_error('Invalid member context');
+
         $message = sanitize_textarea_field($_POST['message'] ?? '');
         $receiver_id = intval($_POST['receiver_id'] ?? 0);
         $governorate = $member->governorate;

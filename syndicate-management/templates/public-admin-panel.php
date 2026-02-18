@@ -121,14 +121,6 @@
         });
     };
 
-    window.smToggleSidebarDropdown = function(element) {
-        const dropdown = element.nextElementSibling;
-        if (dropdown && dropdown.classList.contains('sm-sidebar-dropdown')) {
-            const isVisible = dropdown.style.display === 'block';
-            dropdown.style.display = isVisible ? 'none' : 'block';
-            element.classList.toggle('sm-dropdown-open', !isVisible);
-        }
-    };
 
     window.smDeleteLog = function(logId) {
         if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
@@ -455,7 +447,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                 <?php if (!$is_restricted && ($is_admin || $is_sys_admin || $is_syndicate_admin)): ?>
                     <li class="sm-sidebar-item <?php echo in_array($active_tab, ['members', 'update-requests']) ? 'sm-active' : ''; ?>">
-                        <a href="javascript:void(0)" onclick="smToggleSidebarDropdown(this)" class="sm-sidebar-link sm-has-dropdown"><span class="dashicons dashicons-groups"></span> <?php echo $labels['tab_members']; ?></a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'members'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-groups"></span> <?php echo $labels['tab_members']; ?></a>
                         <ul class="sm-sidebar-dropdown" style="display: <?php echo in_array($active_tab, ['members', 'update-requests']) ? 'block' : 'none'; ?>;">
                             <li><a href="<?php echo add_query_arg('sm_tab', 'members'); ?>" class="<?php echo $active_tab == 'members' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-list-view"></span> قائمة الأعضاء</a></li>
                             <li><a href="<?php echo add_query_arg('sm_tab', 'update-requests'); ?>" class="<?php echo $active_tab == 'update-requests' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-edit"></span> طلبات التحديث</a></li>
@@ -465,14 +457,14 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                 <?php if (!$is_restricted && ($is_admin || $is_sys_admin || $is_syndicate_admin)): ?>
                     <li class="sm-sidebar-item <?php echo in_array($active_tab, ['finance', 'financial-logs']) ? 'sm-active' : ''; ?>">
-                        <a href="javascript:void(0)" onclick="smToggleSidebarDropdown(this)" class="sm-sidebar-link sm-has-dropdown"><span class="dashicons dashicons-money-alt"></span> المحاسبة والمالية</a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'finance'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-money-alt"></span> المحاسبة والمالية</a>
                         <ul class="sm-sidebar-dropdown" style="display: <?php echo in_array($active_tab, ['finance', 'financial-logs']) ? 'block' : 'none'; ?>;">
                             <li><a href="<?php echo add_query_arg('sm_tab', 'finance'); ?>" class="<?php echo $active_tab == 'finance' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-calculator"></span> <?php echo $labels['tab_finance']; ?></a></li>
                             <li><a href="<?php echo add_query_arg('sm_tab', 'financial-logs'); ?>" class="<?php echo $active_tab == 'financial-logs' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-media-spreadsheet"></span> <?php echo $labels['tab_financial_logs']; ?></a></li>
                         </ul>
                     </li>
                     <li class="sm-sidebar-item <?php echo in_array($active_tab, ['practice-licenses', 'facility-licenses']) ? 'sm-active' : ''; ?>">
-                        <a href="javascript:void(0)" onclick="smToggleSidebarDropdown(this)" class="sm-sidebar-link sm-has-dropdown"><span class="dashicons dashicons-id-alt"></span> التراخيص والمنشآت</a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'practice-licenses'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-id-alt"></span> التراخيص والمنشآت</a>
                         <ul class="sm-sidebar-dropdown" style="display: <?php echo in_array($active_tab, ['practice-licenses', 'facility-licenses']) ? 'block' : 'none'; ?>;">
                             <li><a href="<?php echo add_query_arg('sm_tab', 'practice-licenses'); ?>" class="<?php echo $active_tab == 'practice-licenses' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-id-alt"></span> <?php echo $labels['tab_practice_licenses']; ?></a></li>
                             <li><a href="<?php echo add_query_arg('sm_tab', 'facility-licenses'); ?>" class="<?php echo $active_tab == 'facility-licenses' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-building"></span> <?php echo $labels['tab_facility_licenses']; ?></a></li>
@@ -480,11 +472,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                     </li>
                 <?php endif; ?>
 
-                <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin): ?>
-                    <li class="sm-sidebar-item <?php echo $active_tab == 'staffs' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'staffs'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-users"></span> <?php echo $labels['tab_staffs']; ?></a>
-                    </li>
-                <?php endif; ?>
 
                 <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin): ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'printing' ? 'sm-active' : ''; ?>">
@@ -500,11 +487,12 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                 <?php if ($is_admin || $is_sys_admin): ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'global-settings' ? 'sm-active' : ''; ?>">
-                        <a href="javascript:void(0)" onclick="smToggleSidebarDropdown(this)" class="sm-sidebar-link sm-has-dropdown"><span class="dashicons dashicons-admin-generic"></span> <?php echo $labels['tab_global_settings']; ?></a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-generic"></span> <?php echo $labels['tab_global_settings']; ?></a>
                         <ul class="sm-sidebar-dropdown" style="display: <?php echo $active_tab == 'global-settings' ? 'block' : 'none'; ?>;">
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=init" class="sm-sub-active"><span class="dashicons dashicons-admin-tools"></span> تهيئة النظام</a></li>
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=design"><span class="dashicons dashicons-art"></span> التصميم والمظهر</a></li>
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=backup"><span class="dashicons dashicons-database-export"></span> النسخ الاحتياطي</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=init" class="<?php echo (!isset($_GET['sub']) || $_GET['sub'] == 'init') ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-admin-tools"></span> تهيئة النظام</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=staff" class="<?php echo ($_GET['sub'] ?? '') == 'staff' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-admin-users"></span> <?php echo $labels['tab_staffs']; ?></a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=design" class="<?php echo ($_GET['sub'] ?? '') == 'design' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-art"></span> التصميم والمظهر</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=backup" class="<?php echo ($_GET['sub'] ?? '') == 'backup' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-database-export"></span> النسخ الاحتياطي</a></li>
                         </ul>
                     </li>
                 <?php endif; ?>
@@ -556,12 +544,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                     include SM_PLUGIN_DIR . 'templates/messaging-center.php';
                     break;
 
-                case 'staff':
-                case 'staffs':
-                    if ($is_admin || current_user_can('sm_manage_users')) {
-                        include SM_PLUGIN_DIR . 'templates/admin-staff.php';
-                    }
-                    break;
 
                 case 'member-profile':
                 case 'my-profile':
@@ -602,6 +584,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                         ?>
                         <div class="sm-tabs-wrapper" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; overflow-x: auto; white-space: nowrap; padding-bottom: 10px;">
                             <button class="sm-tab-btn <?php echo $sub == 'init' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('syndicate-settings', this)">تهيئة النظام</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'staff' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('system-users-settings', this)">إدارة مستخدمي النظام</button>
                             <button class="sm-tab-btn" onclick="smOpenInternalTab('professional-settings', this)">الدرجات والتخصصات</button>
                             <button class="sm-tab-btn <?php echo $sub == 'design' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('design-settings', this)">التصميم والمظهر</button>
                             <button class="sm-tab-btn <?php echo $sub == 'backup' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('backup-settings', this)">مركز النسخ الاحتياطي</button>
@@ -646,6 +629,10 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                     <button type="submit" name="sm_save_labels" class="sm-btn" style="width:auto; margin-top:10px; background: #2c3e50;">حفظ المسميات الجديدة</button>
                                 </form>
                             </div>
+                        </div>
+
+                        <div id="system-users-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'staff' ? 'block' : 'none'; ?>;">
+                            <?php include SM_PLUGIN_DIR . 'templates/admin-staff.php'; ?>
                         </div>
 
                         <div id="professional-settings" class="sm-internal-tab" style="display:none;">
@@ -860,7 +847,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 </div>
 
 <style>
-.sm-sidebar-item { border-bottom: 1px solid #e2e8f0; transition: 0.2s; }
+.sm-sidebar-item { border-bottom: 1px solid rgba(0,0,0,0.05); transition: 0.2s; position: relative; }
 .sm-sidebar-link {
     padding: 15px 25px;
     cursor: pointer; font-weight: 600; color: #4a5568 !important;
@@ -868,37 +855,35 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
     text-decoration: none !important;
     width: 100%;
 }
-.sm-sidebar-item:hover { background: #edf2f7; }
+.sm-sidebar-item:hover { background: rgba(0,0,0,0.02); }
 .sm-sidebar-item.sm-active {
-    background: #fff !important;
-    border-right: 4px solid var(--sm-primary-color) !important;
+    background: rgba(0,0,0,0.02) !important;
 }
-.sm-sidebar-item.sm-active .sm-sidebar-link {
+.sm-sidebar-item.sm-active > .sm-sidebar-link {
     color: var(--sm-primary-color) !important;
+    font-weight: 700;
 }
 
 .sm-sidebar-badge {
-    position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+    position: absolute; left: 15px; top: 15px;
     background: #e53e3e; color: white; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 800;
 }
 
 .sm-sidebar-dropdown {
-    list-style: none; padding: 0; margin: 0 10px; background: rgba(0,0,0,0.02); display: none; border-radius: 8px;
+    list-style: none; padding: 0; margin: 0; background: rgba(0,0,0,0.04); display: none;
 }
 .sm-sidebar-dropdown li a {
-    display: flex; align-items: center; gap: 10px; padding: 10px 40px;
-    font-size: 12px; color: #718096 !important; text-decoration: none !important;
-    transition: 0.2s; border-right: 3px solid transparent;
+    display: flex; align-items: center; gap: 12px; padding: 10px 25px;
+    font-size: 13px; color: #4a5568 !important; text-decoration: none !important;
+    transition: 0.2s;
 }
-.sm-sidebar-dropdown li a:hover, .sm-sidebar-dropdown li a.sm-sub-active {
-    color: var(--sm-primary-color) !important; background: #fff; border-right-color: var(--sm-primary-color);
+.sm-sidebar-dropdown li a:hover {
+    background: rgba(255,255,255,0.3);
 }
-.sm-sidebar-dropdown li a .dashicons { font-size: 14px; width: 14px; height: 14px; }
-
-.sm-has-dropdown::after {
-    content: "\f347"; font-family: dashicons; position: absolute; left: 20px; font-size: 14px; transition: 0.3s;
+.sm-sidebar-dropdown li a.sm-sub-active {
+    background: var(--sm-dark-color) !important; color: #fff !important; font-weight: 600;
 }
-.sm-dropdown-open::after { transform: rotate(180deg); }
+.sm-sidebar-dropdown li a .dashicons { font-size: 16px; width: 16px; height: 16px; }
 
 .sm-dropdown-item {
     display: flex;

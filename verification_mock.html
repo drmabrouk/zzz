@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --sm-primary-color: #f63049;
+            --sm-dark-color: #111F35;
+            --sm-border-color: #e2e8f0;
+            --sm-radius: 12px;
+            --sm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+        .sm-main-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: white; border-bottom: 1px solid var(--sm-border-color); }
+        .sm-header-nav-link { color: var(--sm-dark-color); text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; }
+        .sm-badge-notif { position: absolute; top: -5px; right: -5px; background: #e53e3e; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid white; }
+        .sm-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid var(--sm-border-color); margin: 20px; }
+        .sm-label { color: #718096; font-size: 12px; font-weight: 600; }
+        .sm-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .sm-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .sm-table th, .sm-table td { padding: 12px; border-bottom: 1px solid #edf2f7; text-align: right; }
+    </style>
+</head>
+<body>
+    <header class="sm-main-header">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <div style="font-weight:800; font-size:1.3em;">نقابة المهن الرياضية</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <div style="display:flex; gap:20px; align-items:center; border-left: 1px solid var(--sm-border-color); padding-left:20px;">
+                <a href="#" class="sm-header-nav-link">
+                    <span>✉️</span>
+                    <span>المراسلات والشكاوى</span>
+                    <span class="sm-badge-notif">3</span>
+                </a>
+                <div style="position:relative;">
+                    <a href="#" class="sm-header-nav-link">
+                        <span>🔔</span>
+                        <span style="position: absolute; top: -5px; right: -5px; background: #f6ad55; color: white; border-radius: 50%; width: 10px; height: 10px; border: 2px solid white;"></span>
+                    </a>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="text-align:right;">
+                    <div style="font-size:0.85em; font-weight:700;">مساء الخير، أحمد محمد</div>
+                    <div style="font-size:0.7em; color:#38a169;">متصل الآن</div>
+                </div>
+                <div style="width:32px; height:32px; border-radius:50%; background:var(--sm-primary-color); border:2px solid var(--sm-primary-color);"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="sm-card">
+        <h3>تصاريح مزاولة المهنة والمنشآت</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+            <div>
+                <h4 style="color:var(--sm-primary-color);">تصريح مزاولة المهنة</h4>
+                <div style="background:#f8fafc; padding:15px; border-radius:8px; display:grid; gap:8px;">
+                    <div><label class="sm-label">رقم التصريح:</label> <span style="font-weight:700;">12345</span></div>
+                    <div><label class="sm-label">تاريخ الإصدار:</label> <span style="font-weight:700;">2023-01-01</span></div>
+                    <div><label class="sm-label">تاريخ الانتهاء:</label> <span style="color:#38a169; font-weight:700;">2025-01-01</span></div>
+                    <div><label class="sm-label">حالة التجديد:</label> <span style="color:#38a169;">مجدد</span></div>
+                </div>
+            </div>
+            <div>
+                <h4 style="color:#38a169;">ترخيص المنشأة</h4>
+                <div style="background:#f8fafc; padding:15px; border-radius:8px;">
+                    <div style="text-align:center; color:#718096; font-weight:700; padding:10px;">غير مقيد - لم يتم إصدار ترخيص</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sm-card">
+        <h3>كشف الحساب المستحق</h3>
+        <table class="sm-table">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th>البند (سبب الاستحقاق)</th>
+                    <th>الحالة</th>
+                    <th>قيمة الخدمة</th>
+                    <th>قيمة الغرامة</th>
+                    <th>إجمالي المستحق</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background: #fff5f5;">
+                    <td style="color:#c53030; font-weight:700;">
+                        <span>⚠️</span> تجديد عضوية لعام 2023
+                        <span style="color:#e53e3e; font-size:10px; display:block;">غرامة تأخير (Fine)</span>
+                    </td>
+                    <td><span class="sm-badge" style="background:#feb2b2; color:#9b2c2c;">غير مسدد</span></td>
+                    <td>100.00</td>
+                    <td style="color:#e53e3e; font-weight:700;">50.00</td>
+                    <td style="font-weight:900;">150.00</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr style="background:#f1f5f9; font-weight:800;">
+                    <td colspan="4">إجمالي المتأخرات والمستحقات (Fine/Amount Due)</td>
+                    <td style="color:var(--sm-primary-color);">150.00 ج.م</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</body>
+</html>

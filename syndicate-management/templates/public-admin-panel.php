@@ -137,6 +137,19 @@
             menu.style.display = 'block';
             document.getElementById('sm-profile-view').style.display = 'block';
             document.getElementById('sm-profile-edit').style.display = 'none';
+            const notif = document.getElementById('sm-notifications-menu');
+            if (notif) notif.style.display = 'none';
+        } else {
+            menu.style.display = 'none';
+        }
+    };
+
+    window.smToggleNotifications = function() {
+        const menu = document.getElementById('sm-notifications-menu');
+        if (menu.style.display === 'none') {
+            menu.style.display = 'block';
+            const userMenu = document.getElementById('sm-user-dropdown-menu');
+            if (userMenu) userMenu.style.display = 'none';
         } else {
             menu.style.display = 'none';
         }
@@ -196,7 +209,7 @@ $is_officer = $is_syndicate_admin || $is_syndicate_member;
 
 $active_tab = isset($_GET['sm_tab']) ? sanitize_text_field($_GET['sm_tab']) : 'summary';
 $is_restricted = $is_member || $is_syndicate_member;
-if ($is_restricted && !in_array($active_tab, ['my-profile', 'member-profile'])) {
+if ($is_restricted && !in_array($active_tab, ['my-profile', 'member-profile', 'messaging', 'surveys'])) {
     $active_tab = 'my-profile';
 }
 
@@ -265,6 +278,57 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                     <button onclick="window.location.href='<?php echo add_query_arg('sm_tab', 'facility-licenses'); ?>&action=new'" class="sm-btn" style="background: #27ae60; height: 38px; font-size: 11px; color: white !important; width: auto;">+ تسجيل منشأة جديدة</button>
                 </div>
             <?php endif; ?>
+
+            <div style="display: flex; gap: 20px; align-items: center; border-left: 1px solid var(--sm-border-color); padding-left: 20px;">
+                <a href="<?php echo add_query_arg('sm_tab', 'messaging'); ?>" class="sm-header-nav-link" title="المراسلات والشكاوى" style="color: var(--sm-dark-color); text-decoration: none; position: relative; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px;">
+                    <span class="dashicons dashicons-email" style="font-size: 20px; width: 20px; height: 20px;"></span>
+                    <span class="sm-hide-mobile">المراسلات والشكاوى</span>
+                    <?php
+                    $unread_msgs = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}sm_messages WHERE receiver_id = %d AND is_read = 0", $user->ID));
+                    if ($unread_msgs > 0): ?>
+                        <span style="position: absolute; top: -5px; right: -5px; background: #e53e3e; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid white;"><?php echo $unread_msgs; ?></span>
+                    <?php endif; ?>
+                </a>
+
+                <div class="sm-notifications-dropdown" style="position: relative;">
+                    <a href="javascript:void(0)" onclick="smToggleNotifications()" title="التنبيهات" style="color: var(--sm-dark-color); text-decoration: none; position: relative;">
+                        <span class="dashicons dashicons-bell" style="font-size: 20px;"></span>
+                        <?php
+                        // Simple dynamic alerts for notifications
+                        $alerts = [];
+                        if ($is_restricted) {
+                            $member_by_wp = $wpdb->get_row($wpdb->prepare("SELECT id, last_paid_membership_year FROM {$wpdb->prefix}sm_members WHERE wp_user_id = %d", $user->ID));
+                            if ($member_by_wp) {
+                                if ($member_by_wp->last_paid_membership_year < date('Y')) {
+                                    $alerts[] = 'يوجد متأخرات في تجديد العضوية السنوية';
+                                }
+                            }
+                        }
+                        if (current_user_can('sm_manage_members')) {
+                            $pending_updates = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}sm_update_requests WHERE status = 'pending'");
+                            if ($pending_updates > 0) {
+                                $alerts[] = 'يوجد ' . $pending_updates . ' طلبات تحديث بيانات بانتظار المراجعة';
+                            }
+                        }
+                        if (count($alerts) > 0): ?>
+                            <span style="position: absolute; top: -5px; right: -5px; background: #f6ad55; color: white; border-radius: 50%; width: 10px; height: 10px; border: 2px solid white;"></span>
+                        <?php endif; ?>
+                    </a>
+                    <div id="sm-notifications-menu" style="display: none; position: absolute; top: 150%; left: 0; background: white; border: 1px solid var(--sm-border-color); border-radius: 8px; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; padding: 15px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 8px;">التنبيهات والإشعارات</h4>
+                        <?php if (empty($alerts)): ?>
+                            <div style="font-size: 12px; color: #94a3b8; text-align: center; padding: 10px;">لا توجد تنبيهات جديدة حالياً</div>
+                        <?php else: ?>
+                            <?php foreach ($alerts as $a): ?>
+                                <div style="font-size: 12px; padding: 8px; border-bottom: 1px solid #f9fafb; color: #4a5568; display: flex; gap: 8px; align-items: flex-start;">
+                                    <span class="dashicons dashicons-warning" style="font-size: 16px; color: #d69e2e;"></span>
+                                    <span><?php echo $a; ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
 
             <div class="sm-user-dropdown" style="position: relative;">
                 <div class="sm-user-profile-nav" onclick="smToggleUserDropdown()" style="display: flex; align-items: center; gap: 12px; background: white; padding: 6px 12px; border-radius: 50px; border: 1px solid var(--sm-border-color); cursor: pointer;">
@@ -381,9 +445,6 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                 <?php endif; ?>
 
                 <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin || $is_syndicate_member || $is_member): ?>
-                    <li class="sm-sidebar-item <?php echo $active_tab == 'messaging' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'messaging'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-email"></span> المراسلات والشكاوى</a>
-                    </li>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'surveys' ? 'sm-active' : ''; ?>">
                         <a href="<?php echo add_query_arg('sm_tab', 'surveys'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-clipboard"></span> استطلاعات الرأي</a>
                     </li>
@@ -470,7 +531,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                 case 'surveys':
                     if ($is_admin || $is_sys_admin || $is_syndicate_admin) {
                         include SM_PLUGIN_DIR . 'templates/admin-surveys.php';
-                    } elseif ($is_syndicate_member) {
+                    } elseif ($is_syndicate_member || $is_member) {
                         // Members see only active surveys to participate
                         include SM_PLUGIN_DIR . 'templates/public-dashboard-summary.php';
                     }
@@ -767,4 +828,9 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 .sm-quick-btn { background: #48bb78 !important; color: white !important; padding: 8px 15px; border-radius: 6px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; display: inline-block; }
 .sm-refresh-btn { background: #718096; color: white; padding: 8px 15px; border-radius: 6px; font-size: 13px; border: none; cursor: pointer; }
 .sm-logout-btn { background: #e53e3e; color: white; padding: 8px 15px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: 700; display: inline-block; }
+
+.sm-header-nav-link:hover { color: var(--sm-primary-color) !important; }
+@media (max-width: 992px) {
+    .sm-hide-mobile { display: none; }
+}
 </style>

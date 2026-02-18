@@ -664,6 +664,12 @@ class SM_Public {
         if (!current_user_can('manage_options') && !current_user_can('sm_full_access')) wp_send_json_error('Unauthorized');
         check_ajax_referer('sm_admin_action', 'nonce');
 
+        $password = $_POST['admin_password'] ?? '';
+        $current_user = wp_get_current_user();
+        if (!wp_check_password($password, $current_user->user_pass, $current_user->ID)) {
+            wp_send_json_error('كلمة المرور غير صحيحة. يرجى إدخال كلمة مرور مدير النظام للمتابعة.');
+        }
+
         global $wpdb;
         $tables = [
             'sm_members', 'sm_payments', 'sm_logs', 'sm_messages',
@@ -718,6 +724,22 @@ class SM_Public {
         wp_send_json_success(SM_DB::get_survey_results(intval($_GET['id'])));
     }
 
+    public function ajax_delete_log() {
+        if (!current_user_can('manage_options')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_admin_action', 'nonce');
+        global $wpdb;
+        $wpdb->delete("{$wpdb->prefix}sm_logs", ['id' => intval($_POST['log_id'])]);
+        wp_send_json_success();
+    }
+
+    public function ajax_clear_all_logs() {
+        if (!current_user_can('manage_options')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_admin_action', 'nonce');
+        global $wpdb;
+        $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}sm_logs");
+        wp_send_json_success();
+    }
+
     public function ajax_export_survey_results() {
         if (!current_user_can('manage_options')) wp_die('Unauthorized');
         $id = intval($_GET['id']);
@@ -741,6 +763,26 @@ class SM_Public {
         }
         if (isset($_POST['sm_import_staffs_csv'])) {
             $this->handle_staff_csv_import();
+        }
+        if (isset($_POST['sm_save_appearance'])) {
+            check_admin_referer('sm_admin_action', 'sm_admin_nonce');
+            $data = SM_Settings::get_appearance();
+            foreach ($data as $k => $v) {
+                if (isset($_POST[$k])) $data[$k] = sanitize_text_field($_POST[$k]);
+            }
+            SM_Settings::save_appearance($data);
+            wp_redirect(add_query_arg('sm_tab', 'global-settings', wp_get_referer()));
+            exit;
+        }
+        if (isset($_POST['sm_save_labels'])) {
+            check_admin_referer('sm_admin_action', 'sm_admin_nonce');
+            $labels = SM_Settings::get_labels();
+            foreach ($labels as $k => $v) {
+                if (isset($_POST[$k])) $labels[$k] = sanitize_text_field($_POST[$k]);
+            }
+            SM_Settings::save_labels($labels);
+            wp_redirect(add_query_arg('sm_tab', 'global-settings', wp_get_referer()));
+            exit;
         }
     }
 

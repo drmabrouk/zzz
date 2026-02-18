@@ -69,12 +69,18 @@ class Syndicate_Management {
         $this->loader->add_action('wp_ajax_sm_reset_system_ajax', $plugin_public, 'ajax_reset_system');
         $this->loader->add_action('wp_ajax_sm_get_user_role', $plugin_public, 'ajax_get_user_role');
         $this->loader->add_action('wp_ajax_sm_update_member_account_ajax', $plugin_public, 'ajax_update_member_account');
+        $this->loader->add_action('wp_ajax_sm_add_service', $plugin_public, 'ajax_add_service');
+        $this->loader->add_action('wp_ajax_sm_update_service', $plugin_public, 'ajax_update_service');
+        $this->loader->add_action('wp_ajax_sm_delete_service', $plugin_public, 'ajax_delete_service');
+        $this->loader->add_action('wp_ajax_sm_submit_service_request', $plugin_public, 'ajax_submit_service_request');
+        $this->loader->add_action('wp_ajax_sm_process_service_request', $plugin_public, 'ajax_process_service_request');
         $this->loader->add_action('wp_ajax_sm_get_member_finance_html', $plugin_public, 'ajax_get_member_finance_html');
         $this->loader->add_action('wp_ajax_sm_update_license_ajax', $plugin_public, 'ajax_update_license');
         $this->loader->add_action('wp_ajax_sm_print_license', $plugin_public, 'ajax_print_license');
         $this->loader->add_action('wp_ajax_sm_update_facility_ajax', $plugin_public, 'ajax_update_facility');
         $this->loader->add_action('wp_ajax_sm_print_facility', $plugin_public, 'ajax_print_facility');
         $this->loader->add_action('wp_ajax_sm_print_invoice', $plugin_public, 'ajax_print_invoice');
+        $this->loader->add_action('wp_ajax_sm_print_service_request', $plugin_public, 'ajax_print_service_request');
         $this->loader->add_action('wp_ajax_sm_submit_update_request_ajax', $plugin_public, 'ajax_submit_update_request_ajax');
         $this->loader->add_action('wp_ajax_sm_process_update_request_ajax', $plugin_public, 'ajax_process_update_request_ajax');
         $this->loader->add_action('wp_ajax_nopriv_sm_forgot_password_otp', $plugin_public, 'ajax_forgot_password_otp');

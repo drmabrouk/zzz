@@ -635,4 +635,85 @@ class SM_DB {
             array('id' => $request_id)
         );
     }
+
+    public static function get_services($args = array()) {
+        global $wpdb;
+        $status = $args['status'] ?? 'active';
+        return $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_services WHERE status = %s ORDER BY created_at DESC", $status));
+    }
+
+    public static function add_service($data) {
+        global $wpdb;
+        return $wpdb->insert("{$wpdb->prefix}sm_services", array(
+            'name' => sanitize_text_field($data['name']),
+            'description' => sanitize_textarea_field($data['description']),
+            'fees' => floatval($data['fees']),
+            'required_fields' => $data['required_fields'], // Expects JSON string
+            'status' => 'active',
+            'created_at' => current_time('mysql')
+        ));
+    }
+
+    public static function update_service($id, $data) {
+        global $wpdb;
+        return $wpdb->update("{$wpdb->prefix}sm_services", $data, array('id' => $id));
+    }
+
+    public static function delete_service($id) {
+        global $wpdb;
+        return $wpdb->delete("{$wpdb->prefix}sm_services", array('id' => $id));
+    }
+
+    public static function submit_service_request($data) {
+        global $wpdb;
+        return $wpdb->insert("{$wpdb->prefix}sm_service_requests", array(
+            'service_id' => intval($data['service_id']),
+            'member_id' => intval($data['member_id']),
+            'request_data' => $data['request_data'], // JSON string
+            'fees_paid' => 0,
+            'status' => 'pending',
+            'created_at' => current_time('mysql'),
+            'updated_at' => current_time('mysql')
+        ));
+    }
+
+    public static function get_service_requests($args = array()) {
+        global $wpdb;
+        $where = "1=1";
+        $params = [];
+
+        if (!empty($args['status'])) {
+            $where .= " AND r.status = %s";
+            $params[] = $args['status'];
+        }
+
+        if (!empty($args['member_id'])) {
+            $where .= " AND r.member_id = %d";
+            $params[] = intval($args['member_id']);
+        }
+
+        $query = "SELECT r.*, s.name as service_name, m.name as member_name, m.governorate
+                  FROM {$wpdb->prefix}sm_service_requests r
+                  JOIN {$wpdb->prefix}sm_services s ON r.service_id = s.id
+                  JOIN {$wpdb->prefix}sm_members m ON r.member_id = m.id
+                  WHERE $where
+                  ORDER BY r.created_at DESC";
+
+        if (!empty($params)) {
+            return $wpdb->get_results($wpdb->prepare($query, $params));
+        }
+        return $wpdb->get_results($query);
+    }
+
+    public static function update_service_request_status($request_id, $status, $fees_paid = null) {
+        global $wpdb;
+        $data = array(
+            'status' => $status,
+            'processed_by' => get_current_user_id(),
+            'updated_at' => current_time('mysql')
+        );
+        if ($fees_paid !== null) $data['fees_paid'] = floatval($fees_paid);
+
+        return $wpdb->update("{$wpdb->prefix}sm_service_requests", $data, array('id' => $request_id));
+    }
 }

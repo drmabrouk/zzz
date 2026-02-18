@@ -149,6 +149,37 @@ class SM_Activator {
             KEY status (status)
         ) $charset_collate;\n";
 
+        // Digital Services Table
+        $table_name = $wpdb->prefix . 'sm_services';
+        $sql .= "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            name tinytext NOT NULL,
+            description text,
+            fees decimal(10,2) DEFAULT 0,
+            required_fields text,
+            status enum('active', 'suspended') DEFAULT 'active',
+            created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;\n";
+
+        // Service Requests Table
+        $table_name = $wpdb->prefix . 'sm_service_requests';
+        $sql .= "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            service_id mediumint(9) NOT NULL,
+            member_id mediumint(9) NOT NULL,
+            request_data text NOT NULL,
+            fees_paid decimal(10,2) DEFAULT 0,
+            status enum('pending', 'processing', 'approved', 'rejected') DEFAULT 'pending',
+            processed_by bigint(20),
+            created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            PRIMARY KEY  (id),
+            KEY service_id (service_id),
+            KEY member_id (member_id),
+            KEY status (status)
+        ) $charset_collate;\n";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
 

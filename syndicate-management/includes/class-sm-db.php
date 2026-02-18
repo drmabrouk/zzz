@@ -303,9 +303,10 @@ class SM_DB {
 
     public static function get_governorate_conversations($governorate) {
         global $wpdb;
+        $table = $wpdb->prefix . 'sm_messages';
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT member_id, MAX(created_at) as last_activity
-             FROM {$wpdb->prefix}sm_messages
+             FROM $table
              WHERE governorate = %s
              GROUP BY member_id
              ORDER BY last_activity DESC",

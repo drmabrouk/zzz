@@ -888,6 +888,11 @@ class SM_Public {
 
         $file_url = null;
         if (!empty($_FILES['message_file']['name'])) {
+            $allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif'];
+            if (!in_array($_FILES['message_file']['type'], $allowed_types)) {
+                wp_send_json_error('نوع الملف غير مسموح به. يسمح فقط بملفات PDF والصور.');
+            }
+
             require_once(ABSPATH . 'wp-admin/includes/file.php');
             require_once(ABSPATH . 'wp-admin/includes/image.php');
             require_once(ABSPATH . 'wp-admin/includes/media.php');
@@ -943,7 +948,11 @@ class SM_Public {
              wp_send_json_success(['type' => 'member_view', 'officials' => $data]);
         } else {
              // Officials see members' tickets
-             wp_send_json_success(['type' => 'official_view', 'conversations' => SM_DB::get_governorate_conversations($gov)]);
+             $conversations = SM_DB::get_governorate_conversations($gov);
+             foreach($conversations as &$c) {
+                 $c['member']->avatar = $c['member']->photo_url ?: get_avatar_url($c['member']->wp_user_id ?: 0);
+             }
+             wp_send_json_success(['type' => 'official_view', 'conversations' => $conversations]);
         }
     }
 

@@ -153,13 +153,6 @@ class SM_Activator {
         dbDelta($sql);
 
         self::setup_roles();
-        self::setup_cron();
-    }
-
-    private static function setup_cron() {
-        if (function_exists('wp_next_scheduled') && !wp_next_scheduled('sm_daily_maintenance')) {
-            wp_schedule_event(time(), 'daily', 'sm_daily_maintenance');
-        }
     }
 
     private static function migrate_settings() {

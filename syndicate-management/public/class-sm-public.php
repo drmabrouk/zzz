@@ -865,7 +865,7 @@ class SM_Public {
 
     public function ajax_send_message() {
         if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
-        check_ajax_referer('sm_message_action', 'sm_message_nonce');
+        check_ajax_referer('sm_message_action', 'nonce');
 
         $sender_id = get_current_user_id();
         $member_id = intval($_POST['member_id'] ?? 0);

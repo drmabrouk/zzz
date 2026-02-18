@@ -226,19 +226,7 @@ class SM_Activator {
     }
 
     private static function setup_roles() {
-        // Clear all existing custom roles first to ensure no traces remain
-        $roles_to_clean = array(
-            'sm_system_admin', 'sm_officer', 'sm_syndicate_member', 'sm_member', 'sm_parent',
-            'sm_syndicate_admin', 'syndicate_admin', 'sm_school_admin', 'school_admin',
-            'discipline_officer', 'sm_principal', 'sm_supervisor', 'sm_teacher',
-            'sm_coordinator', 'sm_clinic', 'sm_student'
-        );
-        foreach ($roles_to_clean as $role_slug) {
-            remove_role($role_slug);
-        }
-
-        // 1. System Manager (مدير النظام)
-        add_role('sm_system_admin', 'مدير النظام', array(
+        $sm_capabilities = array(
             'read' => true,
             'manage_options' => true,
             'sm_manage_system' => true,
@@ -248,22 +236,48 @@ class SM_Activator {
             'sm_manage_licenses' => true,
             'sm_print_reports' => true,
             'sm_full_access' => true
-        ));
+        );
+
+        // 1. System Manager (مدير النظام)
+        if (!get_role('sm_system_admin')) {
+            add_role('sm_system_admin', 'مدير النظام', $sm_capabilities);
+        } else {
+            $role = get_role('sm_system_admin');
+            foreach ($sm_capabilities as $cap => $grant) {
+                $role->add_cap($cap, $grant);
+            }
+        }
+
+        // Ensure WordPress Administrator has all SM capabilities
+        $admin_role = get_role('administrator');
+        if ($admin_role) {
+            foreach ($sm_capabilities as $cap => $grant) {
+                $admin_role->add_cap($cap, $grant);
+            }
+        }
 
         // 2. Syndicate Administrator (مسؤول نقابة)
-        add_role('sm_syndicate_admin', 'مسؤول نقابة', array(
+        $syndicate_admin_caps = array(
             'read' => true,
             'sm_manage_users' => true,
             'sm_manage_members' => true,
             'sm_manage_finance' => true,
             'sm_manage_licenses' => true,
             'sm_print_reports' => true
-        ));
+        );
+        if (!get_role('sm_syndicate_admin')) {
+            add_role('sm_syndicate_admin', 'مسؤول نقابة', $syndicate_admin_caps);
+        } else {
+            $role = get_role('sm_syndicate_admin');
+            foreach ($syndicate_admin_caps as $cap => $grant) {
+                $role->add_cap($cap, $grant);
+            }
+        }
 
         // 3. Syndicate Member (عضو نقابة) - Restricted to personal profile
-        add_role('sm_syndicate_member', 'عضو نقابة', array(
-            'read' => true
-        ));
+        if (!get_role('sm_syndicate_member')) {
+            add_role('sm_syndicate_member', 'عضو نقابة', array('read' => true));
+        }
 
         self::migrate_user_roles();
         self::sync_missing_member_accounts();

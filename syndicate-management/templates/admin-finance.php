@@ -103,35 +103,3 @@ foreach ($members as $m) {
     </div>
 </div>
 
-<!-- Detailed Finance Modal -->
-<div id="sm-finance-member-modal" class="sm-modal-overlay">
-    <div class="sm-modal-content" style="max-width: 900px;">
-        <div class="sm-modal-header">
-            <h3>التفاصيل المالية للعضو</h3>
-            <button class="sm-modal-close" onclick="document.getElementById('sm-finance-member-modal').style.display='none'">&times;</button>
-        </div>
-        <div id="sm-finance-modal-body" style="padding: 20px;">
-            <!-- Loaded via AJAX or static script -->
-            <div style="text-align:center; padding: 40px;">جاري تحميل البيانات...</div>
-        </div>
-    </div>
-</div>
-
-<script>
-function smOpenFinanceModal(memberId) {
-    const modal = document.getElementById('sm-finance-member-modal');
-    const body = document.getElementById('sm-finance-modal-body');
-    modal.style.display = 'flex';
-    body.innerHTML = '<div style="text-align:center; padding: 40px;">جاري تحميل البيانات...</div>';
-
-    fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=sm_get_member_finance_html&member_id=' + memberId)
-    .then(r => r.json())
-    .then(res => {
-        if (res.success) {
-            body.innerHTML = res.data.html;
-        } else {
-            body.innerHTML = '<div style="color:red; text-align:center; padding:20px;">' + res.data + '</div>';
-        }
-    });
-}
-</script>

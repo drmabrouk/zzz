@@ -303,7 +303,7 @@ class SM_DB {
 
     public static function get_governorate_officials($governorate) {
         return get_users(array(
-            'role__in' => array('sm_system_admin', 'sm_syndicate_admin'),
+            'role__in' => array('sm_system_admin', 'sm_syndicate_admin', 'administrator'),
             'meta_query' => array(
                 array(
                     'key' => 'sm_governorate',
@@ -511,7 +511,11 @@ class SM_DB {
 
     public static function get_surveys($role) {
         global $wpdb;
-        return $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_surveys WHERE (recipients = %s OR recipients = 'all') AND status = 'active' ORDER BY created_at DESC", $role));
+        $roles = [$role, 'all'];
+        if ($role === 'sm_syndicate_member') $roles[] = 'sm_member';
+
+        $placeholders = implode(',', array_fill(0, count($roles), '%s'));
+        return $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_surveys WHERE recipients IN ($placeholders) AND status = 'active' ORDER BY created_at DESC", ...$roles));
     }
 
     public static function save_survey_response($survey_id, $user_id, $responses) {

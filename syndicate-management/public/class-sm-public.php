@@ -167,94 +167,128 @@ class SM_Public {
             exit;
         }
         $syndicate = SM_Settings::get_syndicate_info();
-        $output = '<div class="sm-login-container" style="display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 20px;">';
-        $output .= '<div class="sm-login-box" style="width: 100%; max-width: 400px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #f0f0f0;" dir="rtl">';
+        $output = '<div class="sm-login-container" style="display: flex; justify-content: center; align-items: center; min-height: 90vh; padding: 20px; background: #f4f7f6;">';
+        $output .= '<div class="sm-login-box" style="width: 100%; max-width: 450px; background: #ffffff; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #eef2f1;" dir="rtl">';
 
-        $output .= '<div style="background: #111F35; padding: 40px 20px; text-align: center;">';
-        if (!empty($syndicate['syndicate_logo'])) {
-            $output .= '<img src="'.esc_url($syndicate['syndicate_logo']).'" style="max-height: 90px; margin-bottom: 20px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">';
-        }
-        $output .= '<h2 style="margin: 0; font-weight: 800; color: #ffffff; font-size: 1.4em; letter-spacing: -0.5px;">'.esc_html($syndicate['syndicate_name']).'</h2>';
+        $output .= '<div style="background: #111F35; padding: 50px 20px; text-align: center;">';
+        $output .= '<h3 style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.9em; font-weight: 400; text-transform: uppercase; letter-spacing: 1px;">مرحباً بك في النظام</h3>';
+        $output .= '<h2 style="margin: 10px 0 5px 0; font-weight: 800; color: #ffffff; font-size: 1.6em; letter-spacing: -0.5px;">'.esc_html($syndicate['syndicate_name']).'</h2>';
+        $output .= '<p style="margin: 0; color: rgba(255,255,255,0.6); font-size: 0.85em;">نظام تسجيل الدخول الموحد</p>';
         $output .= '</div>';
 
-        $output .= '<div style="padding: 40px 30px;">';
+        $output .= '<div style="padding: 40px 35px;">';
         if (isset($_GET['login']) && $_GET['login'] == 'failed') {
             $output .= '<div style="background: #fff5f5; color: #c53030; padding: 12px; border-radius: 8px; border: 1px solid #feb2b2; margin-bottom: 25px; font-size: 0.85em; text-align: center; font-weight: 600;">⚠️ خطأ في اسم المستخدم أو كلمة المرور</div>';
         }
 
         $output .= '<style>
             #sm_login_form p { margin-bottom: 20px; }
-            #sm_login_form label { display: none; }
+            #sm_login_form label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #4a5568; }
             #sm_login_form input[type="text"], #sm_login_form input[type="password"] {
-                width: 100%; padding: 14px 20px; border: 1px solid #e2e8f0; border-radius: 10px;
+                width: 100%; padding: 14px 20px; border: 1px solid #e2e8f0; border-radius: 12px;
                 background: #f8fafc; font-size: 15px; transition: 0.3s; font-family: "Rubik", sans-serif;
             }
             #sm_login_form input:focus { border-color: var(--sm-primary-color); outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(246, 48, 73, 0.1); }
             #sm_login_form .login-remember { display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: #64748b; }
             #sm_login_form input[type="submit"] {
-                width: 100%; padding: 14px; background: #111F35; color: #fff; border: none;
-                border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s;
+                width: 100%; padding: 16px; background: #111F35; color: #fff; border: none;
+                border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s;
                 margin-top: 10px;
             }
-            #sm_login_form input[type="submit"]:hover { background: var(--sm-primary-color); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(246, 48, 73, 0.2); }
+            #sm_login_form input[type="submit"]:hover { background: var(--sm-primary-color); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(246, 48, 73, 0.2); }
+            .sm-login-footer-links { margin-top: 30px; text-align: center; display: flex; flex-direction: column; gap: 15px; }
+            .sm-footer-btn { text-decoration: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; transition: 0.2s; display: block; border: 1px solid #e2e8f0; color: #4a5568; }
+            .sm-footer-btn:hover { background: #f8fafc; border-color: #cbd5e0; }
+            .sm-footer-btn-primary { background: var(--sm-primary-color); color: white !important; border: none; }
+            .sm-footer-btn-primary:hover { background: var(--sm-secondary-color); opacity: 0.9; }
         </style>';
 
         $args = array(
             'echo' => false,
             'redirect' => home_url('/sm-admin'),
             'form_id' => 'sm_login_form',
-            'label_username' => 'اسم المستخدم',
+            'label_username' => 'اسم المستخدم أو الرقم القومي',
             'label_password' => 'كلمة المرور',
             'label_remember' => 'تذكرني على هذا الجهاز',
-            'label_log_in' => 'تسجيل الدخول للنظام',
+            'label_log_in' => 'تسجيل الدخول',
             'remember' => true
         );
         $form = wp_login_form($args);
 
         // Inject placeholders
-        $form = str_replace('name="log"', 'name="log" placeholder="اسم المستخدم أو الرقم القومي"', $form);
-        $form = str_replace('name="pwd"', 'name="pwd" placeholder="كلمة المرور الخاصة بك"', $form);
+        $form = str_replace('name="log"', 'name="log" placeholder="14 رقم أو اسم المستخدم"', $form);
+        $form = str_replace('name="pwd"', 'name="pwd" placeholder="********"', $form);
 
         $output .= $form;
 
-        $output .= '<div style="margin-top: 25px; text-align: center; font-size: 0.9em; display: flex; flex-direction: column; gap: 12px;">';
-        $output .= '<a href="javascript:smToggleRecovery()" style="color: var(--sm-primary-color); text-decoration: none; font-weight: 600;">نسيت كلمة المرور؟</a>';
-        $output .= '<a href="javascript:smToggleActivation()" style="color: #64748b; text-decoration: none;">تفعيل حساب عضو قديم</a>';
+        $output .= '<div class="sm-login-footer-links">';
+        $output .= '<a href="javascript:void(0)" onclick="smToggleRegistration()" class="sm-footer-btn sm-footer-btn-primary">تسجيل عضو جديد</a>';
+        $output .= '<a href="javascript:void(0)" onclick="smToggleActivation()" class="sm-footer-btn">تفعيل حساب عضو سابق</a>';
+        $output .= '<a href="javascript:void(0)" onclick="smToggleRecovery()" style="color: #64748b; font-size: 13px; text-decoration: none;">نسيت كلمة المرور؟</a>';
         $output .= '</div>';
 
         // Recovery Modal
-        $output .= '<div id="sm-recovery-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; padding:20px;">';
-        $output .= '<div style="background:white; width:100%; max-width:400px; padding:30px; border-radius:16px; position:relative;">';
-        $output .= '<button onclick="smToggleRecovery()" style="position:absolute; top:15px; left:15px; border:none; background:none; font-size:20px; cursor:pointer;">&times;</button>';
-        $output .= '<h3 style="margin-top:0; margin-bottom:20px; text-align:center;">استعادة كلمة المرور</h3>';
+        $output .= '<div id="sm-recovery-modal" class="sm-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; padding:20px;">';
+        $output .= '<div class="sm-modal-content" style="background:white; width:100%; max-width:400px; padding:35px; border-radius:20px; position:relative;">';
+        $output .= '<button onclick="smToggleRecovery()" style="position:absolute; top:20px; left:20px; border:none; background:none; font-size:24px; cursor:pointer; color:#94a3b8;">&times;</button>';
+        $output .= '<h3 style="margin-top:0; margin-bottom:25px; text-align:center; font-weight:800;">استعادة كلمة المرور</h3>';
         $output .= '<div id="recovery-step-1">';
-        $output .= '<p style="font-size:13px; color:#64748b; margin-bottom:15px;">أدخل الرقم القومي لإرسال رمز التحقق إلى بريدك الإلكتروني.</p>';
-        $output .= '<input type="text" id="rec_national_id" class="sm-input" placeholder="الرقم القومي (14 رقم)" style="margin-bottom:15px; width:100%;">';
+        $output .= '<p style="font-size:14px; color:#64748b; margin-bottom:20px; line-height:1.6;">أدخل الرقم القومي الخاص بك للتحقق وإرسال رمز الاستعادة.</p>';
+        $output .= '<div class="sm-form-group" style="margin-bottom:20px;"><label class="sm-label">الرقم القومي:</label><input type="text" id="rec_national_id" class="sm-input" placeholder="14 رقم" maxlength="14" style="width:100%;"></div>';
         $output .= '<button onclick="smRequestOTP()" class="sm-btn" style="width:100%;">إرسال رمز التحقق</button>';
         $output .= '</div>';
         $output .= '<div id="recovery-step-2" style="display:none;">';
-        $output .= '<p style="font-size:13px; color:#64748b; margin-bottom:15px;">تم إرسال الرمز. أدخل الرمز وكلمة المرور الجديدة.</p>';
+        $output .= '<p style="font-size:13px; color:#38a169; margin-bottom:15px;">تم إرسال الرمز بنجاح. يرجى التحقق من بريدك.</p>';
         $output .= '<input type="text" id="rec_otp" class="sm-input" placeholder="رمز التحقق (6 أرقام)" style="margin-bottom:10px; width:100%;">';
-        $output .= '<input type="password" id="rec_new_pass" class="sm-input" placeholder="كلمة المرور الجديدة (10+ أحرف وأرقام)" style="margin-bottom:15px; width:100%;">';
+        $output .= '<input type="password" id="rec_new_pass" class="sm-input" placeholder="كلمة المرور الجديدة" style="margin-bottom:20px; width:100%;">';
         $output .= '<button onclick="smResetPassword()" class="sm-btn" style="width:100%;">تغيير كلمة المرور</button>';
         $output .= '</div>';
         $output .= '</div></div>';
 
-        // Activation Modal
-        $output .= '<div id="sm-activation-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; padding:20px;">';
-        $output .= '<div style="background:white; width:100%; max-width:450px; padding:30px; border-radius:16px; position:relative;">';
-        $output .= '<button onclick="smToggleActivation()" style="position:absolute; top:15px; left:15px; border:none; background:none; font-size:20px; cursor:pointer;">&times;</button>';
-        $output .= '<h3 style="margin-top:0; margin-bottom:20px; text-align:center;">تفعيل حساب العضوية</h3>';
-        $output .= '<div id="activation-step-1">';
-        $output .= '<input type="text" id="act_national_id" class="sm-input" placeholder="الرقم القومي" style="margin-bottom:10px; width:100%;">';
-        $output .= '<input type="text" id="act_phone" class="sm-input" placeholder="رقم الهاتف المسجل" style="margin-bottom:10px; width:100%;">';
-        $output .= '<input type="text" id="act_mem_no" class="sm-input" placeholder="رقم العضوية" style="margin-bottom:15px; width:100%;">';
-        $output .= '<button onclick="smActivateStep1()" class="sm-btn" style="width:100%;">التحقق من البيانات</button>';
+        // Registration Modal (Membership Request)
+        $output .= '<div id="sm-registration-modal" class="sm-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; padding:20px;">';
+        $output .= '<div class="sm-modal-content" style="background:white; width:100%; max-width:600px; max-height: 90vh; overflow-y: auto; padding:40px; border-radius:24px; position:relative;">';
+        $output .= '<button onclick="smToggleRegistration()" style="position:absolute; top:20px; left:20px; border:none; background:none; font-size:24px; cursor:pointer; color:#94a3b8;">&times;</button>';
+        $output .= '<div style="text-align:center; margin-bottom:30px;"><h3 style="margin:0; font-weight:900; font-size:1.5em; color:var(--sm-dark-color);">طلب عضوية جديدة</h3><p style="color:#64748b; font-size:13px; margin-top:5px;">يرجى ملء كافة البيانات بدقة للمراجعة</p></div>';
+        $output .= '<form id="sm-membership-request-form">';
+        $output .= '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">';
+        $output .= '<div class="sm-form-group" style="grid-column: span 2;"><label class="sm-label">الاسم الرباعي الكامل:</label><input name="name" type="text" class="sm-input" required placeholder="أدخل اسمك كما هو في البطاقة"></div>';
+        $output .= '<div class="sm-form-group"><label class="sm-label">الرقم القومي (14 رقم):</label><input name="national_id" type="text" class="sm-input" required maxlength="14" placeholder="299..."></div>';
+        $output .= '<div class="sm-form-group"><label class="sm-label">المحافظة:</label><select name="governorate" class="sm-select" required><option value="">-- اختر --</option>';
+        foreach(SM_Settings::get_governorates() as $k=>$v) $output .= "<option value='$k'>$v</option>";
+        $output .= '</select></div>';
+        $output .= '<div class="sm-form-group"><label class="sm-label">الدرجة الوظيفية:</label><select name="professional_grade" class="sm-select">';
+        foreach(SM_Settings::get_professional_grades() as $k=>$v) $output .= "<option value='$k'>$v</option>";
+        $output .= '</select></div>';
+        $output .= '<div class="sm-form-group"><label class="sm-label">التخصص:</label><select name="specialization" class="sm-select">';
+        foreach(SM_Settings::get_specializations() as $k=>$v) $output .= "<option value='$k'>$v</option>";
+        $output .= '</select></div>';
+        $output .= '<div class="sm-form-group"><label class="sm-label">رقم الهاتف:</label><input name="phone" type="text" class="sm-input" required placeholder="01..."></div>';
+        $output .= '<div class="sm-form-group"><label class="sm-label">البريد الإلكتروني:</label><input name="email" type="email" class="sm-input" required placeholder="example@mail.com"></div>';
+        $output .= '<div class="sm-form-group" style="grid-column: span 2;"><label class="sm-label">ملاحظات إضافية:</label><textarea name="notes" class="sm-textarea" rows="2"></textarea></div>';
         $output .= '</div>';
+        $output .= '<button type="submit" class="sm-btn" style="width:100%; margin-top:25px; padding:15px;">إرسال طلب العضوية</button>';
+        $output .= '</form>';
+        $output .= '</div></div>';
+
+        // Activation Modal (Sequential Workflow)
+        $output .= '<div id="sm-activation-modal" class="sm-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; padding:20px;">';
+        $output .= '<div class="sm-modal-content" style="background:white; width:100%; max-width:450px; padding:40px; border-radius:24px; position:relative;">';
+        $output .= '<button onclick="smToggleActivation()" style="position:absolute; top:20px; left:20px; border:none; background:none; font-size:24px; cursor:pointer; color:#94a3b8;">&times;</button>';
+        $output .= '<div style="text-align:center; margin-bottom:30px;"><h3 style="margin:0; font-weight:900;">تفعيل الحساب</h3><p style="color:#64748b; font-size:13px; margin-top:5px;">للأعضاء المسجلين مسبقاً في السجلات الورقية</p></div>';
+
+        $output .= '<div id="activation-step-1">';
+        $output .= '<p style="font-size:14px; color:#4a5568; margin-bottom:20px; background:#f7fafc; padding:15px; border-radius:12px; border-right:4px solid var(--sm-primary-color);">الخطوة 1: التحقق من الهوية بالسجلات</p>';
+        $output .= '<div class="sm-form-group" style="margin-bottom:15px;"><label class="sm-label">الرقم القومي:</label><input type="text" id="act_national_id" class="sm-input" placeholder="14 رقم" style="width:100%;"></div>';
+        $output .= '<div class="sm-form-group" style="margin-bottom:15px;"><label class="sm-label">رقم العضوية:</label><input type="text" id="act_mem_no" class="sm-input" placeholder="كما هو مسجل بالكارنيه" style="width:100%;"></div>';
+        $output .= '<button onclick="smActivateStep1()" class="sm-btn" style="width:100%;">متابعة التحقق</button>';
+        $output .= '</div>';
+
         $output .= '<div id="activation-step-2" style="display:none;">';
-        $output .= '<input type="email" id="act_email" class="sm-input" placeholder="البريد الإلكتروني الجديد" style="margin-bottom:10px; width:100%;">';
-        $output .= '<input type="password" id="act_pass" class="sm-input" placeholder="كلمة المرور الجديدة (10+ أحرف وأرقام)" style="margin-bottom:15px; width:100%;">';
-        $output .= '<button onclick="smActivateFinal()" class="sm-btn" style="width:100%;">تفعيل الحساب الآن</button>';
+        $output .= '<p style="font-size:14px; color:#38a169; margin-bottom:20px; background:#f0fff4; padding:15px; border-radius:12px; border-right:4px solid #38a169;">الخطوة 2: إنشاء بيانات الدخول</p>';
+        $output .= '<div class="sm-form-group" style="margin-bottom:12px;"><label class="sm-label">البريد الإلكتروني المعتمد:</label><input type="email" id="act_email" class="sm-input" placeholder="للتواصل واستعادة الحساب" style="width:100%;"></div>';
+        $output .= '<div class="sm-form-group" style="margin-bottom:20px;"><label class="sm-label">كلمة مرور قوية:</label><input type="password" id="act_pass" class="sm-input" placeholder="10 أحرف وأرقام على الأقل" style="width:100%;"></div>';
+        $output .= '<button onclick="smActivateFinal()" class="sm-btn" style="width:100%;">إكمال التفعيل والدخول</button>';
         $output .= '</div>';
         $output .= '</div></div>';
 
@@ -265,6 +299,12 @@ class SM_Public {
         }
         function smToggleActivation() {
             const m = document.getElementById("sm-activation-modal");
+            m.style.display = m.style.display === "none" ? "flex" : "none";
+            document.getElementById("activation-step-1").style.display = "block";
+            document.getElementById("activation-step-2").style.display = "none";
+        }
+        function smToggleRegistration() {
+            const m = document.getElementById("sm-registration-modal");
             m.style.display = m.style.display === "none" ? "flex" : "none";
         }
         function smRequestOTP() {
@@ -289,10 +329,10 @@ class SM_Public {
         }
         function smActivateStep1() {
             const nid = document.getElementById("act_national_id").value;
-            const ph = document.getElementById("act_phone").value;
             const mem = document.getElementById("act_mem_no").value;
+            if(!/^[0-9]{14}$/.test(nid)) return alert("يرجى إدخال رقم قومي صحيح (14 رقم)");
             const fd = new FormData(); fd.append("action", "sm_activate_account_step1");
-            fd.append("national_id", nid); fd.append("phone", ph); fd.append("membership_number", mem);
+            fd.append("national_id", nid); fd.append("membership_number", mem);
             fetch("'.admin_url('admin-ajax.php').'", {method:"POST", body:fd}).then(r=>r.json()).then(res=>{
                 if(res.success) {
                     document.getElementById("activation-step-1").style.display="none";
@@ -302,17 +342,35 @@ class SM_Public {
         }
         function smActivateFinal() {
             const nid = document.getElementById("act_national_id").value;
-            const ph = document.getElementById("act_phone").value;
             const mem = document.getElementById("act_mem_no").value;
             const email = document.getElementById("act_email").value;
             const pass = document.getElementById("act_pass").value;
+            if(!/^\S+@\S+\.\S+$/.test(email)) return alert("يرجى إدخال بريد إلكتروني صحيح");
+            if(pass.length < 10) return alert("كلمة المرور يجب أن تكون 10 أحرف على الأقل");
             const fd = new FormData(); fd.append("action", "sm_activate_account_final");
-            fd.append("national_id", nid); fd.append("phone", ph); fd.append("membership_number", mem);
+            fd.append("national_id", nid); fd.append("membership_number", mem);
             fd.append("email", email); fd.append("password", pass);
             fetch("'.admin_url('admin-ajax.php').'", {method:"POST", body:fd}).then(r=>r.json()).then(res=>{
                 if(res.success) { alert(res.data); location.reload(); } else alert(res.data);
             });
         }
+
+        document.getElementById("sm-membership-request-form")?.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const fd = new FormData(this);
+            fd.append("action", "sm_submit_membership_request");
+            fd.append("nonce", "'.wp_create_nonce("sm_registration_nonce").'");
+
+            const nid = fd.get("national_id");
+            if(!/^[0-9]{14}$/.test(nid)) return alert("يرجى إدخال رقم قومي صحيح (14 رقم)");
+
+            fetch("'.admin_url('admin-ajax.php').'", {method:"POST", body:fd}).then(r=>r.json()).then(res=>{
+                if(res.success) {
+                    alert("تم إرسال طلبك بنجاح. سيتم مراجعته من قبل الإدارة وسيتم تفعيل حسابك فور الموافقة.");
+                    smToggleRegistration();
+                } else alert(res.data);
+            });
+        });
         </script>';
 
         $output .= '</div>'; // End padding
@@ -1244,6 +1302,68 @@ class SM_Public {
         }
     }
 
+    public function ajax_submit_membership_request() {
+        check_ajax_referer('sm_registration_nonce', 'nonce');
+
+        global $wpdb;
+        $nid = sanitize_text_field($_POST['national_id']);
+
+        // Check if already exists in members or requests
+        if (SM_DB::member_exists($nid)) {
+            wp_send_json_error('عذراً، هذا الرقم القومي مسجل مسبقاً في النظام.');
+        }
+
+        $exists_request = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_membership_requests WHERE national_id = %s", $nid));
+        if ($exists_request) {
+            wp_send_json_error('عذراً، يوجد طلب عضوية قيد المراجعة بهذا الرقم القومي.');
+        }
+
+        $res = $wpdb->insert("{$wpdb->prefix}sm_membership_requests", [
+            'national_id' => $nid,
+            'name' => sanitize_text_field($_POST['name']),
+            'governorate' => sanitize_text_field($_POST['governorate']),
+            'professional_grade' => sanitize_text_field($_POST['professional_grade']),
+            'specialization' => sanitize_text_field($_POST['specialization']),
+            'phone' => sanitize_text_field($_POST['phone']),
+            'email' => sanitize_email($_POST['email']),
+            'notes' => sanitize_textarea_field($_POST['notes']),
+            'status' => 'pending',
+            'created_at' => current_time('mysql')
+        ]);
+
+        if ($res) wp_send_json_success();
+        else wp_send_json_error('فشل في إرسال الطلب، يرجى المحاولة لاحقاً.');
+    }
+
+    public function ajax_process_membership_request() {
+        if (!current_user_can('sm_manage_members')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_admin_action', 'nonce');
+
+        $request_id = intval($_POST['request_id']);
+        $status = sanitize_text_field($_POST['status']); // 'approved' or 'rejected'
+
+        global $wpdb;
+        $req = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_membership_requests WHERE id = %d", $request_id));
+        if (!$req) wp_send_json_error('Request not found');
+
+        if ($status === 'approved') {
+            // Move to main members table
+            $member_data = (array)$req;
+            unset($member_data['id'], $member_data['status'], $member_data['processed_by'], $member_data['created_at']);
+
+            $member_id = SM_DB::add_member($member_data);
+            if (is_wp_error($member_id)) wp_send_json_error($member_id->get_error_message());
+        }
+
+        $wpdb->update("{$wpdb->prefix}sm_membership_requests", [
+            'status' => $status,
+            'processed_by' => get_current_user_id()
+        ], ['id' => $request_id]);
+
+        SM_Logger::log('معالجة طلب عضوية', "تم {$status} طلب العضوية للرقم القومي: {$req->national_id}");
+        wp_send_json_success();
+    }
+
     public function ajax_forgot_password_otp() {
         $national_id = sanitize_text_field($_POST['national_id'] ?? '');
         $member = SM_DB::get_member_by_national_id($national_id);
@@ -1300,14 +1420,13 @@ class SM_Public {
 
     public function ajax_activate_account_step1() {
         $national_id = sanitize_text_field($_POST['national_id'] ?? '');
-        $phone = sanitize_text_field($_POST['phone'] ?? '');
         $membership_number = sanitize_text_field($_POST['membership_number'] ?? '');
 
         $member = SM_DB::get_member_by_national_id($national_id);
-        if (!$member) wp_send_json_error('الرقم القومي غير موجود');
+        if (!$member) wp_send_json_error('الرقم القومي غير موجود في السجلات.');
 
-        if ($member->phone !== $phone || $member->membership_number !== $membership_number) {
-            wp_send_json_error('البيانات المدخلة لا تطابق سجلات العضوية');
+        if ($member->membership_number !== $membership_number) {
+            wp_send_json_error('بيانات التحقق غير صحيحة، يرجى مراجعة رقم العضوية.');
         }
 
         wp_send_json_success('تم التحقق بنجاح. يرجى إكمال بيانات الحساب');
@@ -1315,13 +1434,12 @@ class SM_Public {
 
     public function ajax_activate_account_final() {
         $national_id = sanitize_text_field($_POST['national_id'] ?? '');
-        $phone = sanitize_text_field($_POST['phone'] ?? '');
         $membership_number = sanitize_text_field($_POST['membership_number'] ?? '');
         $new_email = sanitize_email($_POST['email'] ?? '');
         $new_pass = $_POST['password'] ?? '';
 
         $member = SM_DB::get_member_by_national_id($national_id);
-        if (!$member || $member->phone !== $phone || $member->membership_number !== $membership_number) {
+        if (!$member || $member->membership_number !== $membership_number) {
             wp_send_json_error('فشل التحقق من الهوية');
         }
 

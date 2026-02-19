@@ -115,11 +115,12 @@ $total_period_amount = array_reduce($payments, function($carry, $item) { return 
                             <td style="font-size: 10px; color: #d69e2e; font-family: monospace; font-weight: 700;"><?php echo esc_html($p->paper_invoice_code ?: '---'); ?></td>
                             <td style="font-weight: 800; color: #38a169;"><?php echo number_format($p->amount, 2); ?></td>
                             <td>
-                                <?php if (current_user_can('sm_full_access') || current_user_can('manage_options')): ?>
-                                    <button onclick="smDeleteTransaction(<?php echo $p->id; ?>)" class="sm-btn sm-btn-outline" style="color:#e53e3e; border-color:#feb2b2; padding:2px 8px; font-size:11px;">حذف/تراجع</button>
-                                <?php else: ?>
-                                    <span style="font-size: 10px; color: #999;">لا توجد صلاحية</span>
-                                <?php endif; ?>
+                                <div style="display:flex; gap:5px;">
+                                    <a href="<?php echo admin_url('admin-ajax.php?action=sm_print_invoice&payment_id='.$p->id); ?>" target="_blank" class="sm-btn" style="height:25px; padding:0 8px; font-size:10px; width:auto; background:#2c3e50; text-decoration:none; display:flex; align-items:center; gap:4px;"><span class="dashicons dashicons-pdf" style="font-size:14px;"></span> فاتورة</a>
+                                    <?php if (current_user_can('sm_full_access') || current_user_can('manage_options')): ?>
+                                        <button onclick="smDeleteTransaction(<?php echo $p->id; ?>)" class="sm-btn sm-btn-outline" style="color:#e53e3e; border-color:#feb2b2; padding:2px 8px; font-size:10px; width:auto;">حذف</button>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>

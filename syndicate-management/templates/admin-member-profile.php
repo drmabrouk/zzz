@@ -91,6 +91,7 @@ $acc_status = SM_Finance::get_member_status($member->id);
     <!-- Profile Tabs -->
     <div class="sm-tabs-wrapper" style="display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
         <button class="sm-tab-btn sm-active" onclick="smOpenInternalTab('profile-info', this)"><span class="dashicons dashicons-admin-users"></span> بيانات العضوية</button>
+        <button class="sm-tab-btn" onclick="smOpenInternalTab('finance-management', this)"><span class="dashicons dashicons-money-alt"></span> الإدارة المالية</button>
         <button class="sm-tab-btn" onclick="smOpenInternalTab('document-vault', this); smLoadDocuments();"><span class="dashicons dashicons-portfolio"></span> الأرشيف والمستندات</button>
     </div>
 
@@ -119,56 +120,90 @@ $acc_status = SM_Finance::get_member_status($member->id);
                 </div>
             </div>
 
-            <!-- Professional Permits -->
-            <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--sm-border-color); box-shadow: var(--sm-shadow);">
-                <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">تصاريح مزاولة المهنة والمنشآت</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <h4 style="color: var(--sm-primary-color); margin:0;">تصريح مزاولة المهنة</h4>
-                            <?php
-                            $lic_valid = ($member->license_expiration_date && $member->license_expiration_date >= date('Y-m-d'));
-                            echo $lic_valid ? '<span class="sm-badge sm-badge-low" style="background:#def7ec; color:#03543f;">صالح</span>' : '<span class="sm-badge sm-badge-high">منتهي</span>';
-                            ?>
-                        </div>
-                        <div style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px;">
-                            <?php if (empty($member->license_number)): ?>
-                                <div style="text-align: center; color: #718096; font-weight: 700; padding: 10px;">غير مقيد - لم يتم إصدار تصريح</div>
-                            <?php else: ?>
-                                <div style="display:grid; gap:8px;">
-                                    <div><label class="sm-label">رقم التصريح:</label> <span style="font-weight:700;"><?php echo esc_html($member->license_number); ?></span></div>
-                                    <div><label class="sm-label">تاريخ الإصدار:</label> <span style="font-weight:700;"><?php echo esc_html($member->license_issue_date ?: '---'); ?></span></div>
-                                    <div><label class="sm-label">تاريخ الانتهاء:</label> <span style="color: <?php echo $lic_valid ? '#38a169' : '#e53e3e'; ?>; font-weight:700;"><?php echo esc_html($member->license_expiration_date ?: '---'); ?></span></div>
-                                    <div><label class="sm-label">حالة التجديد:</label> <?php echo $lic_valid ? '<span style="color:#38a169;">مجدد</span>' : '<span style="color:#e53e3e;">مطلوب التجديد</span>'; ?></div>
-                                </div>
-                            <?php endif; ?>
-                        </div>
+            <!-- Professional Permits Section -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Practice License Card -->
+                <div class="sm-license-card" style="background: #fff; border-radius: 12px; border: 1px solid var(--sm-border-color); overflow: hidden; box-shadow: var(--sm-shadow);">
+                    <div style="background: var(--sm-primary-color); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: #fff;">
+                        <h4 style="margin: 0; font-weight: 800;"><span class="dashicons dashicons-id-alt" style="vertical-align: middle;"></span> تصريح مزاولة المهنة</h4>
+                        <?php
+                        $lic_valid = ($member->license_expiration_date && $member->license_expiration_date >= date('Y-m-d'));
+                        $lic_badge_bg = $lic_valid ? '#38a169' : '#e53e3e';
+                        if (empty($member->license_number)) $lic_badge_bg = '#718096';
+                        ?>
+                        <span class="sm-badge" style="background: <?php echo $lic_badge_bg; ?>; color: #fff; border: 1px solid rgba(255,255,255,0.3);">
+                            <?php echo empty($member->license_number) ? 'غير مسجل' : ($lic_valid ? 'ساري' : 'منتهي'); ?>
+                        </span>
                     </div>
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <h4 style="color: #38a169; margin:0;">ترخيص المنشأة</h4>
-                            <?php
-                            if (!empty($member->facility_number)) {
-                                $fac_valid = ($member->facility_license_expiration_date && $member->facility_license_expiration_date >= date('Y-m-d'));
-                                echo $fac_valid ? '<span class="sm-badge sm-badge-low" style="background:#def7ec; color:#03543f;">صالح</span>' : '<span class="sm-badge sm-badge-high">منتهي</span>';
-                            } else {
-                                echo '<span class="sm-badge" style="background:#eee; color:#999;">غير مسجل</span>';
-                            }
-                            ?>
-                        </div>
-                        <div style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px;">
-                            <?php if (empty($member->facility_number)): ?>
-                                <div style="text-align: center; color: #718096; font-weight: 700; padding: 10px;">غير مقيد - لم يتم إصدار ترخيص</div>
-                            <?php else: ?>
-                                <div style="display:grid; gap:8px;">
-                                    <div><label class="sm-label">اسم المنشأة:</label> <span style="font-weight:700;"><?php echo esc_html($member->facility_name ?: 'غير متوفر'); ?></span></div>
-                                    <div><label class="sm-label">رقم الترخيص:</label> <span style="font-weight:700;"><?php echo esc_html($member->facility_number); ?></span></div>
-                                    <div><label class="sm-label">تاريخ الإصدار:</label> <span style="font-weight:700;"><?php echo esc_html($member->facility_license_issue_date ?: '---'); ?></span></div>
-                                    <div><label class="sm-label">تاريخ الانتهاء:</label> <span style="color: <?php echo $fac_valid ? '#38a169' : '#e53e3e'; ?>; font-weight:700;"><?php echo esc_html($member->facility_license_expiration_date ?: '---'); ?></span></div>
-                                    <div><label class="sm-label">حالة التجديد:</label> <?php echo $fac_valid ? '<span style="color:#38a169;">مجدد</span>' : '<span style="color:#e53e3e;">مطلوب التجديد</span>'; ?></div>
+                    <div style="padding: 20px;">
+                        <?php if (empty($member->license_number)): ?>
+                            <div style="text-align: center; color: #94a3b8; padding: 20px;">
+                                <span class="dashicons dashicons-warning" style="font-size: 32px; width: 32px; height: 32px;"></span>
+                                <p style="margin-top: 10px; font-weight: 700;">غير مقيد بسجل تصاريح المزاولة</p>
+                            </div>
+                        <?php else: ?>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div><label class="sm-label" style="font-size: 11px;">رقم التصريح</label><div style="font-weight: 800; color: var(--sm-dark-color);"><?php echo esc_html($member->license_number); ?></div></div>
+                                <div><label class="sm-label" style="font-size: 11px;">تاريخ الإصدار</label><div style="font-weight: 700;"><?php echo esc_html($member->license_issue_date ?: '---'); ?></div></div>
+                                <div style="grid-column: span 2;">
+                                    <label class="sm-label" style="font-size: 11px;">تاريخ الانتهاء</label>
+                                    <div style="font-weight: 800; color: <?php echo $lic_valid ? '#38a169' : '#e53e3e'; ?>; font-size: 1.1em;">
+                                        <?php echo esc_html($member->license_expiration_date ?: '---'); ?>
+                                        <?php if ($lic_valid): ?>
+                                            <span style="font-size: 11px; font-weight: 400; margin-right: 5px;">(ينتهي خلال <?php
+                                                $d1 = new DateTime(); $d2 = new DateTime($member->license_expiration_date);
+                                                echo $d1->diff($d2)->days;
+                                            ?> يوم)</span>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                            <?php endif; ?>
-                        </div>
+                            </div>
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9; display: flex; gap: 10px;">
+                                <?php if (current_user_can('sm_print_reports')): ?>
+                                    <a href="<?php echo admin_url('admin-ajax.php?action=sm_print_license&member_id='.$member->id); ?>" target="_blank" class="sm-btn sm-btn-outline" style="height: 32px; font-size: 11px; width: auto;"><span class="dashicons dashicons-printer"></span> طباعة التصريح</a>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Facility License Card -->
+                <div class="sm-license-card" style="background: #fff; border-radius: 12px; border: 1px solid var(--sm-border-color); overflow: hidden; box-shadow: var(--sm-shadow);">
+                    <div style="background: #2c3e50; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: #fff;">
+                        <h4 style="margin: 0; font-weight: 800;"><span class="dashicons dashicons-building" style="vertical-align: middle;"></span> ترخيص المنشأة</h4>
+                        <?php
+                        $fac_valid = ($member->facility_license_expiration_date && $member->facility_license_expiration_date >= date('Y-m-d'));
+                        $fac_badge_bg = $fac_valid ? '#27ae60' : '#e53e3e';
+                        if (empty($member->facility_number)) $fac_badge_bg = '#718096';
+                        ?>
+                        <span class="sm-badge" style="background: <?php echo $fac_badge_bg; ?>; color: #fff; border: 1px solid rgba(255,255,255,0.3);">
+                            <?php echo empty($member->facility_number) ? 'غير مسجل' : ($fac_valid ? 'ساري' : 'منتهي'); ?>
+                        </span>
+                    </div>
+                    <div style="padding: 20px;">
+                        <?php if (empty($member->facility_number)): ?>
+                            <div style="text-align: center; color: #94a3b8; padding: 20px;">
+                                <span class="dashicons dashicons-building" style="font-size: 32px; width: 32px; height: 32px;"></span>
+                                <p style="margin-top: 10px; font-weight: 700;">لم يتم تسجيل منشأة لهذا العضو</p>
+                            </div>
+                        <?php else: ?>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div style="grid-column: span 2;"><label class="sm-label" style="font-size: 11px;">اسم المنشأة</label><div style="font-weight: 800; color: var(--sm-dark-color);"><?php echo esc_html($member->facility_name); ?></div></div>
+                                <div><label class="sm-label" style="font-size: 11px;">رقم الترخيص</label><div style="font-weight: 700;"><?php echo esc_html($member->facility_number); ?></div></div>
+                                <div><label class="sm-label" style="font-size: 11px;">الفئة</label><div><span class="sm-badge sm-badge-low" style="background: #edf2f7; color: #2d3748;"><?php echo esc_html($member->facility_category); ?></span></div></div>
+                                <div style="grid-column: span 2;">
+                                    <label class="sm-label" style="font-size: 11px;">تاريخ انتهاء الترخيص</label>
+                                    <div style="font-weight: 800; color: <?php echo $fac_valid ? '#38a169' : '#e53e3e'; ?>;">
+                                        <?php echo esc_html($member->facility_license_expiration_date ?: '---'); ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9; display: flex; gap: 10px;">
+                                <?php if (current_user_can('sm_print_reports')): ?>
+                                    <a href="<?php echo admin_url('admin-ajax.php?action=sm_print_facility&member_id='.$member->id); ?>" target="_blank" class="sm-btn sm-btn-outline" style="height: 32px; font-size: 11px; width: auto;"><span class="dashicons dashicons-printer"></span> طباعة الترخيص</a>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -194,6 +229,11 @@ $acc_status = SM_Finance::get_member_status($member->id);
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Finance Management Tab -->
+    <div id="finance-management" class="sm-internal-tab" style="display: none;">
+        <?php include SM_PLUGIN_DIR . 'templates/member-finance-tab.php'; ?>
     </div>
 
     <!-- Document Vault Tab -->

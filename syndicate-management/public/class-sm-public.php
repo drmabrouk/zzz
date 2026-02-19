@@ -1551,8 +1551,12 @@ class SM_Public {
             'file_type' => $file_type
         ]);
 
-        if ($doc_id) wp_send_json_success(['doc_id' => $doc_id]);
-        else wp_send_json_error('Failed to save document info');
+        if ($doc_id) {
+            wp_send_json_success(['doc_id' => $doc_id]);
+        } else {
+            global $wpdb;
+            wp_send_json_error('Failed to save document info: ' . $wpdb->last_error);
+        }
     }
 
     public function ajax_get_documents() {
@@ -1601,6 +1605,88 @@ class SM_Public {
         if (!$doc || !$this->can_access_member($doc->member_id)) wp_send_json_error('Access denied');
 
         SM_DB::log_document_action($doc_id, 'view');
+        wp_send_json_success();
+    }
+
+    // Publishing Center
+    public function ajax_get_pub_template() {
+        if (!current_user_can('sm_manage_system')) wp_send_json_error('Unauthorized');
+        $id = intval($_GET['id']);
+        global $wpdb;
+        $template = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_pub_templates WHERE id = %d", $id));
+        if ($template) wp_send_json_success($template);
+        else wp_send_json_error('Template not found');
+    }
+
+    public function ajax_save_pub_template() {
+        if (!current_user_can('sm_manage_system')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_pub_action', 'nonce');
+        $id = SM_DB::save_pub_template($_POST);
+        if ($id) wp_send_json_success($id);
+        else wp_send_json_error('Failed to save template');
+    }
+
+    public function ajax_generate_pub_doc() {
+        if (!current_user_can('sm_manage_system')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_pub_action', 'nonce');
+
+        $data = [
+            'title' => sanitize_text_field($_POST['title']),
+            'content' => wp_kses_post($_POST['content']),
+            'doc_type' => 'document',
+            'format' => sanitize_text_field($_POST['format']),
+            'options' => [
+                'header' => !empty($_POST['header']),
+                'footer' => !empty($_POST['footer']),
+                'qr' => !empty($_POST['qr'])
+            ]
+        ];
+
+        $doc_id = SM_DB::generate_pub_document($data);
+        if ($doc_id) {
+            wp_send_json_success(['url' => admin_url('admin-ajax.php?action=sm_print_pub_doc&id=' . $doc_id . '&format=' . $data['format'])]);
+        } else {
+            wp_send_json_error('Failed to generate document');
+        }
+    }
+
+    public function ajax_print_pub_doc() {
+        $id = intval($_GET['id']);
+        $format = $_GET['format'] ?? 'pdf';
+
+        global $wpdb;
+        $doc = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_pub_documents WHERE id = %d", $id));
+        if (!$doc) wp_die('Document not found');
+
+        // Increment download count
+        $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}sm_pub_documents SET download_count = download_count + 1 WHERE id = %d", $id));
+
+        if ($format === 'image') {
+            // Simplified image output for demo (would normally use a renderer)
+            header('Content-Type: text/html; charset=UTF-8');
+            echo "<html><body style='margin:0; padding:40px; background:#f0f0f0; display:flex; justify-content:center;'>";
+            echo "<div id='doc-capture' style='background:white; width:800px; min-height:1000px; padding:60px; box-shadow:0 0 20px rgba(0,0,0,0.1); font-family:Arial;'>";
+            echo $doc->content;
+            echo "</div></body></html>";
+            exit;
+        }
+
+        // PDF Output
+        include SM_PLUGIN_DIR . 'templates/print-pub-document.php';
+        exit;
+    }
+
+    public function ajax_save_pub_identity() {
+        if (!current_user_can('sm_manage_system')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_pub_action', 'nonce');
+
+        update_option('sm_pub_stamp_url', esc_url_raw($_POST['stamp']));
+        update_option('sm_pub_footer_statement', sanitize_textarea_field($_POST['footer']));
+
+        $syndicate = SM_Settings::get_syndicate_info();
+        $syndicate['syndicate_logo'] = esc_url_raw($_POST['logo']);
+        SM_Settings::save_syndicate_info($syndicate);
+
         wp_send_json_success();
     }
 }

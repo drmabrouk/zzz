@@ -283,6 +283,7 @@ class SM_Activator {
             created_by bigint(20),
             download_count int DEFAULT 0,
             last_format varchar(20),
+            options text,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             UNIQUE KEY serial_number (serial_number)

@@ -476,7 +476,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                 <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin): ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'printing' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'printing'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-printer"></span> <?php echo $labels['tab_printing']; ?></a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'printing'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-printer"></span> مركز الطباعة والنشر</a>
                     </li>
                 <?php endif; ?>
 
@@ -566,7 +566,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                 case 'printing':
                     if ($is_admin || current_user_can('sm_print_reports')) {
-                        include SM_PLUGIN_DIR . 'templates/printing-cards.php';
+                        include SM_PLUGIN_DIR . 'templates/admin-publishing-center.php';
                     }
                     break;
 

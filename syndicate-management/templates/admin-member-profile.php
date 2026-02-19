@@ -93,6 +93,7 @@ $acc_status = SM_Finance::get_member_status($member->id);
         <button class="sm-tab-btn sm-active" onclick="smOpenInternalTab('profile-info', this)"><span class="dashicons dashicons-admin-users"></span> بيانات العضوية</button>
         <button class="sm-tab-btn" onclick="smOpenInternalTab('finance-management', this)"><span class="dashicons dashicons-money-alt"></span> الإدارة المالية</button>
         <button class="sm-tab-btn" onclick="smOpenInternalTab('document-vault', this); smLoadDocuments();"><span class="dashicons dashicons-portfolio"></span> الأرشيف والمستندات</button>
+        <button class="sm-tab-btn" onclick="smOpenInternalTab('member-chat', this); setTimeout(() => selectConversation(<?php echo $member->id; ?>, '<?php echo esc_js($member->name); ?>', <?php echo $member->wp_user_id ?: 0; ?>), 100);"><span class="dashicons dashicons-email"></span> المراسلات والشكاوى</button>
     </div>
 
     <div id="profile-info" class="sm-internal-tab">
@@ -239,6 +240,16 @@ $acc_status = SM_Finance::get_member_status($member->id);
     <!-- Document Vault Tab -->
     <div id="document-vault" class="sm-internal-tab" style="display: none;">
         <?php include SM_PLUGIN_DIR . 'templates/member-document-vault.php'; ?>
+    </div>
+
+    <!-- Communication Tab -->
+    <div id="member-chat" class="sm-internal-tab" style="display: none;">
+        <div style="height: 600px; border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: #fff;">
+            <?php
+            // Reuse messaging-center but in a compact way
+            include SM_PLUGIN_DIR . 'templates/messaging-center.php';
+            ?>
+        </div>
     </div>
 
     <!-- Edit Member Modal (Moved here to be functional) -->

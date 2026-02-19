@@ -830,11 +830,12 @@ class SM_DB {
             'serial_number' => $serial,
             'title' => sanitize_text_field($data['title']),
             'content' => $data['content'],
+            'options' => json_encode($data['options'] ?? []),
             'created_by' => get_current_user_id(),
             'created_at' => current_time('mysql')
         ]);
 
-        return $res ? $serial : false;
+        return $res ? $wpdb->insert_id : false;
     }
 
     public static function get_pub_documents($args = []) {

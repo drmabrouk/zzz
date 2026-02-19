@@ -786,6 +786,80 @@ class SM_Public {
         wp_send_json_success();
     }
 
+    public function ajax_add_service() {
+        if (!current_user_can('sm_manage_system')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_admin_action', 'nonce');
+        $res = SM_DB::add_service($_POST);
+        if ($res) wp_send_json_success();
+        else wp_send_json_error('Failed to add service');
+    }
+
+    public function ajax_update_service() {
+        if (!current_user_can('sm_manage_system')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_admin_action', 'nonce');
+        $id = intval($_POST['id']);
+        $data = [
+            'name' => sanitize_text_field($_POST['name']),
+            'description' => sanitize_textarea_field($_POST['description']),
+            'fees' => floatval($_POST['fees']),
+            'status' => sanitize_text_field($_POST['status'])
+        ];
+        if (SM_DB::update_service($id, $data)) wp_send_json_success();
+        else wp_send_json_error('Failed to update service');
+    }
+
+    public function ajax_delete_service() {
+        if (!current_user_can('sm_manage_system')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_admin_action', 'nonce');
+        if (SM_DB::delete_service(intval($_POST['id']))) wp_send_json_success();
+        else wp_send_json_error('Failed to delete service');
+    }
+
+    public function ajax_submit_service_request() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_service_action', 'nonce');
+
+        $member_id = intval($_POST['member_id']);
+        if (!$this->can_access_member($member_id)) wp_send_json_error('Access denied');
+
+        $res = SM_DB::submit_service_request($_POST);
+        if ($res) {
+            SM_Logger::log('طلب خدمة رقمية', "العضو ID: $member_id طلب خدمة ID: {$_POST['service_id']}");
+            wp_send_json_success();
+        } else wp_send_json_error('Failed to submit request');
+    }
+
+    public function ajax_process_service_request() {
+        if (!current_user_can('sm_manage_members')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_admin_action', 'nonce');
+
+        $id = intval($_POST['id']);
+        $status = sanitize_text_field($_POST['status']);
+
+        global $wpdb;
+        $req = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_service_requests WHERE id = %d", $id));
+        if (!$req) wp_send_json_error('Request not found');
+
+        $res = SM_DB::update_service_request_status($id, $status);
+        if ($res) {
+             if ($status === 'approved') {
+                 // Record in finance if fees > 0
+                 $service = $wpdb->get_row($wpdb->prepare("SELECT fees, name FROM {$wpdb->prefix}sm_services WHERE id = %d", $req->service_id));
+                 if ($service && $service->fees > 0) {
+                      SM_Finance::record_payment([
+                          'member_id' => $req->member_id,
+                          'amount' => $service->fees,
+                          'payment_type' => 'other',
+                          'payment_date' => current_time('Y-m-d'),
+                          'details_ar' => 'رسوم خدمة: ' . $service->name,
+                          'notes' => 'طلب رقم #' . $id
+                      ]);
+                 }
+             }
+             wp_send_json_success();
+        } else wp_send_json_error('Failed to process request');
+    }
+
     public function ajax_export_survey_results() {
         if (!current_user_can('manage_options')) wp_die('Unauthorized');
         $id = intval($_GET['id']);
@@ -1017,8 +1091,9 @@ class SM_Public {
 
         $user = wp_get_current_user();
         $gov = get_user_meta($user->ID, 'sm_governorate', true);
+        $has_full_access = current_user_can('sm_full_access') || current_user_can('manage_options');
 
-        if (!$gov && !current_user_can('manage_options')) wp_send_json_error('No governorate assigned');
+        if (!$gov && !$has_full_access) wp_send_json_error('No governorate assigned');
 
         if (in_array('sm_syndicate_member', (array)$user->roles)) {
              // Members see officials of their governorate
@@ -1036,7 +1111,9 @@ class SM_Public {
              wp_send_json_success(['type' => 'member_view', 'officials' => $data]);
         } else {
              // Officials see members' tickets
-             $conversations = SM_DB::get_governorate_conversations($gov);
+             // If System Admin/WP Admin, pass null to see all governorates
+             $target_gov = $has_full_access ? null : $gov;
+             $conversations = SM_DB::get_governorate_conversations($target_gov);
              foreach($conversations as &$c) {
                  $c['member']->avatar = $c['member']->photo_url ?: get_avatar_url($c['member']->wp_user_id ?: 0);
              }
@@ -1090,6 +1167,19 @@ class SM_Public {
             if (!$pmt || !$this->can_access_member($pmt->member_id)) wp_die('Unauthorized');
         }
         include SM_PLUGIN_DIR . 'templates/print-invoice.php';
+        exit;
+    }
+
+    public function ajax_print_service_request() {
+        $id = intval($_GET['id']);
+        global $wpdb;
+        $req = $wpdb->get_row($wpdb->prepare("SELECT member_id, status FROM {$wpdb->prefix}sm_service_requests WHERE id = %d", $id));
+        if (!$req) wp_die('Request not found');
+
+        if (!$this->can_access_member($req->member_id)) wp_die('Unauthorized');
+        if ($req->status !== 'approved' && !current_user_can('sm_manage_members')) wp_die('Access denied');
+
+        include SM_PLUGIN_DIR . 'templates/print-service-request.php';
         exit;
     }
 

@@ -480,6 +480,9 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                 <?php endif; ?>
 
                 <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin || $is_syndicate_member || $is_member): ?>
+                    <li class="sm-sidebar-item <?php echo $active_tab == 'digital-services' ? 'sm-active' : ''; ?>">
+                        <a href="<?php echo add_query_arg('sm_tab', 'digital-services'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-cloud"></span> الخدمات الرقمية</a>
+                    </li>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'surveys' ? 'sm-active' : ''; ?>">
                         <a href="<?php echo add_query_arg('sm_tab', 'surveys'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-clipboard"></span> <?php echo $labels['tab_surveys']; ?></a>
                     </li>
@@ -570,6 +573,10 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                         // Members see only active surveys to participate
                         include SM_PLUGIN_DIR . 'templates/public-dashboard-summary.php';
                     }
+                    break;
+
+                case 'digital-services':
+                    include SM_PLUGIN_DIR . 'templates/admin-services.php';
                     break;
 
                 case 'update-requests':

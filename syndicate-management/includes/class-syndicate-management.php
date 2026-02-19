@@ -90,6 +90,11 @@ class Syndicate_Management {
         $this->loader->add_action('wp_ajax_nopriv_sm_activate_account_step1', $plugin_public, 'ajax_activate_account_step1');
         $this->loader->add_action('wp_ajax_nopriv_sm_activate_account_final', $plugin_public, 'ajax_activate_account_final');
         $this->loader->add_action('wp_ajax_sm_get_template_ajax', $plugin_public, 'ajax_get_template_ajax');
+        $this->loader->add_action('wp_ajax_sm_upload_document', $plugin_public, 'ajax_upload_document');
+        $this->loader->add_action('wp_ajax_sm_get_documents', $plugin_public, 'ajax_get_documents');
+        $this->loader->add_action('wp_ajax_sm_delete_document', $plugin_public, 'ajax_delete_document');
+        $this->loader->add_action('wp_ajax_sm_get_document_logs', $plugin_public, 'ajax_get_document_logs');
+        $this->loader->add_action('wp_ajax_sm_log_document_view', $plugin_public, 'ajax_log_document_view');
         $this->loader->add_action('sm_daily_maintenance', 'SM_DB', 'delete_expired_messages');
         $this->loader->add_action('sm_daily_maintenance', 'SM_Notifications', 'run_daily_checks');
     }

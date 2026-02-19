@@ -232,6 +232,34 @@ class SM_Activator {
             KEY sent_at (sent_at)
         ) $charset_collate;\n";
 
+        // Documents Table
+        $table_name = $wpdb->prefix . 'sm_documents';
+        $sql .= "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            member_id mediumint(9) NOT NULL,
+            category enum('licenses', 'certificates', 'receipts', 'other') NOT NULL,
+            title varchar(255) NOT NULL,
+            file_url text NOT NULL,
+            file_type varchar(50),
+            created_by bigint(20),
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY member_id (member_id),
+            KEY category (category)
+        ) $charset_collate;\n";
+
+        // Document Logs Table
+        $table_name = $wpdb->prefix . 'sm_document_logs';
+        $sql .= "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            document_id mediumint(9) NOT NULL,
+            action varchar(50) NOT NULL,
+            user_id bigint(20),
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY document_id (document_id)
+        ) $charset_collate;\n";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
 

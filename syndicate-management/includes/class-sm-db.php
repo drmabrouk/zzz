@@ -717,4 +717,71 @@ class SM_DB {
 
         return $wpdb->update("{$wpdb->prefix}sm_service_requests", $data, array('id' => $request_id));
     }
+
+    // Document Vault Methods
+    public static function add_document($data) {
+        global $wpdb;
+        $res = $wpdb->insert("{$wpdb->prefix}sm_documents", array(
+            'member_id' => intval($data['member_id']),
+            'category' => sanitize_text_field($data['category']),
+            'title' => sanitize_text_field($data['title']),
+            'file_url' => esc_url_raw($data['file_url']),
+            'file_type' => sanitize_text_field($data['file_type']),
+            'created_by' => get_current_user_id(),
+            'created_at' => current_time('mysql')
+        ));
+        if ($res) {
+            $doc_id = $wpdb->insert_id;
+            self::log_document_action($doc_id, 'upload');
+            return $doc_id;
+        }
+        return false;
+    }
+
+    public static function get_member_documents($member_id, $args = []) {
+        global $wpdb;
+        $query = "SELECT * FROM {$wpdb->prefix}sm_documents WHERE member_id = %d";
+        $params = [intval($member_id)];
+
+        if (!empty($args['category'])) {
+            $query .= " AND category = %s";
+            $params[] = sanitize_text_field($args['category']);
+        }
+
+        if (!empty($args['search'])) {
+            $query .= " AND title LIKE %s";
+            $params[] = '%' . $wpdb->esc_like($args['search']) . '%';
+        }
+
+        $query .= " ORDER BY created_at DESC";
+        return $wpdb->get_results($wpdb->prepare($query, $params));
+    }
+
+    public static function delete_document($doc_id) {
+        global $wpdb;
+        self::log_document_action($doc_id, 'delete');
+        return $wpdb->delete("{$wpdb->prefix}sm_documents", array('id' => intval($doc_id)));
+    }
+
+    public static function log_document_action($doc_id, $action) {
+        global $wpdb;
+        return $wpdb->insert("{$wpdb->prefix}sm_document_logs", array(
+            'document_id' => intval($doc_id),
+            'action' => sanitize_text_field($action),
+            'user_id' => get_current_user_id(),
+            'created_at' => current_time('mysql')
+        ));
+    }
+
+    public static function get_document_logs($doc_id) {
+        global $wpdb;
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT l.*, u.display_name as user_name
+             FROM {$wpdb->prefix}sm_document_logs l
+             LEFT JOIN {$wpdb->prefix}users u ON l.user_id = u.ID
+             WHERE l.document_id = %d
+             ORDER BY l.created_at DESC",
+            intval($doc_id)
+        ));
+    }
 }

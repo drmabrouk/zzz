@@ -88,10 +88,17 @@ $acc_status = SM_Finance::get_member_status($member->id);
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
-        <div style="display: flex; flex-direction: column; gap: 30px;">
-            <!-- Basic Info -->
-            <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--sm-border-color); box-shadow: var(--sm-shadow);">
+    <!-- Profile Tabs -->
+    <div class="sm-tabs-wrapper" style="display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+        <button class="sm-tab-btn sm-active" onclick="smOpenInternalTab('profile-info', this)"><span class="dashicons dashicons-admin-users"></span> بيانات العضوية</button>
+        <button class="sm-tab-btn" onclick="smOpenInternalTab('document-vault', this); smLoadDocuments();"><span class="dashicons dashicons-portfolio"></span> الأرشيف والمستندات</button>
+    </div>
+
+    <div id="profile-info" class="sm-internal-tab">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+            <div style="display: flex; flex-direction: column; gap: 30px;">
+                <!-- Basic Info -->
+                <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--sm-border-color); box-shadow: var(--sm-shadow);">
                 <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">البيانات الأساسية</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div><label class="sm-label">الرقم القومي:</label> <div class="sm-value"><?php echo esc_html($member->national_id); ?></div></div>
@@ -181,11 +188,17 @@ $acc_status = SM_Finance::get_member_status($member->id);
                     <div style="display: flex; justify-content: space-between;"><span>المبلغ المطلوب سداده:</span> <strong><?php echo number_format($finance['total_owed'], 2); ?></strong></div>
                     <div style="display: flex; justify-content: space-between;"><span>إجمالي ما تم سداده:</span> <strong style="color:#38a169;"><?php echo number_format($finance['total_paid'], 2); ?></strong></div>
                 </div>
-                <button onclick="smOpenFinanceModal(<?php echo $member->id; ?>)" class="sm-btn" style="margin-top: 20px; background: var(--sm-dark-color);">
-                    <?php echo ($is_syndicate_staff && !current_user_can('sm_manage_finance')) ? 'عرض كشف الحساب' : 'إدارة المدفوعات والفواتير'; ?>
-                </button>
+                    <button onclick="smOpenFinanceModal(<?php echo $member->id; ?>)" class="sm-btn" style="margin-top: 20px; background: var(--sm-dark-color);">
+                        <?php echo ($is_syndicate_staff && !current_user_can('sm_manage_finance')) ? 'عرض كشف الحساب' : 'إدارة المدفوعات والفواتير'; ?>
+                    </button>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- Document Vault Tab -->
+    <div id="document-vault" class="sm-internal-tab" style="display: none;">
+        <?php include SM_PLUGIN_DIR . 'templates/member-document-vault.php'; ?>
     </div>
 
     <!-- Edit Member Modal (Moved here to be functional) -->

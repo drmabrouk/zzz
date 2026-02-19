@@ -189,6 +189,15 @@ class SM_Finance {
 
             // Trigger Invoice Delivery (Email & Account)
             self::deliver_invoice($payment_id);
+
+            // Archive Invoice in Digital Vault
+            SM_DB::add_document([
+                'member_id' => $data['member_id'],
+                'category' => 'receipts',
+                'title' => "إيصال سداد رقم " . $digital_code,
+                'file_url' => admin_url('admin-ajax.php?action=sm_print_invoice&payment_id=' . $payment_id),
+                'file_type' => 'application/pdf'
+            ]);
         }
 
         return $insert;

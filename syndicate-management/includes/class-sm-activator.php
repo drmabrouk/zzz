@@ -180,6 +180,28 @@ class SM_Activator {
             KEY status (status)
         ) $charset_collate;\n";
 
+        // Membership Requests Table
+        $table_name = $wpdb->prefix . 'sm_membership_requests';
+        $sql .= "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            national_id varchar(14) NOT NULL,
+            name tinytext NOT NULL,
+            gender enum('male', 'female') DEFAULT 'male',
+            professional_grade tinytext,
+            specialization tinytext,
+            academic_degree tinytext,
+            governorate tinytext,
+            phone tinytext,
+            email tinytext,
+            notes text,
+            status enum('pending', 'approved', 'rejected') DEFAULT 'pending',
+            processed_by bigint(20),
+            created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY national_id (national_id),
+            KEY status (status)
+        ) $charset_collate;\n";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
 

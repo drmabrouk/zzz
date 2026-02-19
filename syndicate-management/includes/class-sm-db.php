@@ -649,6 +649,7 @@ class SM_DB {
             'description' => sanitize_textarea_field($data['description']),
             'fees' => floatval($data['fees']),
             'required_fields' => $data['required_fields'], // Expects JSON string
+            'selected_profile_fields' => $data['selected_profile_fields'] ?? '',
             'status' => 'active',
             'created_at' => current_time('mysql')
         ));

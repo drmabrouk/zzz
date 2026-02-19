@@ -120,9 +120,33 @@ $all_requests = $is_official ? SM_DB::get_service_requests() : [];
             <div class="sm-form-group"><label class="sm-label">اسم الخدمة:</label><input name="name" type="text" class="sm-input" required></div>
             <div class="sm-form-group"><label class="sm-label">وصف الخدمة:</label><textarea name="description" class="sm-textarea" rows="3"></textarea></div>
             <div class="sm-form-group"><label class="sm-label">الرسوم (0 للمجانية):</label><input name="fees" type="number" step="0.01" class="sm-input" value="0"></div>
+
             <div class="sm-form-group">
-                <label class="sm-label">الحقول المطلوبة (JSON):</label>
-                <textarea name="required_fields" class="sm-textarea" rows="4">[{"name": "full_name", "label": "الاسم الكامل", "type": "text"}]</textarea>
+                <label class="sm-label">البيانات الشخصية المطلوبة من ملف العضو:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <?php
+                    $profile_fields = [
+                        'name' => 'الاسم الكامل',
+                        'national_id' => 'الرقم القومي',
+                        'membership_number' => 'رقم العضوية',
+                        'professional_grade' => 'الدرجة الوظيفية',
+                        'specialization' => 'التخصص',
+                        'phone' => 'رقم الهاتف',
+                        'email' => 'البريد الإلكتروني',
+                        'governorate' => 'المحافظة',
+                        'facility_name' => 'اسم المنشأة'
+                    ];
+                    foreach ($profile_fields as $key => $label): ?>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                            <input type="checkbox" name="profile_fields[]" value="<?php echo $key; ?>"> <?php echo $label; ?>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="sm-form-group">
+                <label class="sm-label">حقول إضافية مخصصة (JSON):</label>
+                <textarea name="required_fields" class="sm-textarea" rows="4">[]</textarea>
                 <p style="font-size: 10px; color: #666; margin-top: 5px;">مثال: [{"name": "year", "label": "سنة التخرج", "type": "number"}]</p>
             </div>
             <button type="submit" class="sm-btn">حفظ الخدمة</button>
@@ -159,6 +183,14 @@ $all_requests = $is_official ? SM_DB::get_service_requests() : [];
     $('#add-service-form').on('submit', function(e) {
         e.preventDefault();
         const fd = new FormData(this);
+
+        // Collect checked profile fields
+        const profileFields = [];
+        $(this).find('input[name="profile_fields[]"]:checked').each(function() {
+            profileFields.push($(this).val());
+        });
+        fd.append('selected_profile_fields', JSON.stringify(profileFields));
+
         fd.append('action', 'sm_add_service');
         fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
         fetch(ajaxurl, {method: 'POST', body: fd}).then(r=>r.json()).then(res=>{
@@ -183,6 +215,15 @@ $all_requests = $is_official ? SM_DB::get_service_requests() : [];
         $('#req-service-fees').text(s.fees > 0 ? s.fees + ' ج.م' : 'مجاناً');
 
         const container = $('#dynamic-fields-container').empty();
+
+        // Add notice about profile fields
+        if (s.selected_profile_fields) {
+            const pFields = JSON.parse(s.selected_profile_fields);
+            if (pFields.length > 0) {
+                container.append('<p style="font-size:12px; color:#666; margin-bottom:15px; background:#f0f4f8; padding:10px; border-radius:5px;">سيتم سحب بياناتك الشخصية (الاسم، الرقم القومي، إلخ) تلقائياً من ملفك الشخصي لإدراجها في المستند.</p>');
+            }
+        }
+
         try {
             const fields = JSON.parse(s.required_fields);
             fields.forEach(f => {

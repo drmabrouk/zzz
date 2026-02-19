@@ -928,13 +928,13 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 .sm-logout-btn { background: #e53e3e; color: white; padding: 8px 15px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: 700; display: inline-block; }
 
 .sm-header-circle-icon {
-    width: 40px; height: 40px; background: #fff; border-radius: 50%;
+    width: 40px; height: 40px; background: #f8fafc; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    color: var(--sm-dark-color); text-decoration: none; position: relative;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid var(--sm-border-color);
+    color: var(--sm-dark-color); text-decoration: none !important; position: relative;
+    box-shadow: none; border: none;
     transition: 0.3s;
 }
-.sm-header-circle-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); color: var(--sm-primary-color); }
+.sm-header-circle-icon:hover { background: #edf2f7; color: var(--sm-primary-color); }
 .sm-header-circle-icon .dashicons { font-size: 20px; width: 20px; height: 20px; }
 
 .sm-admin-dashboard .sm-btn { background-color: <?php echo $appearance['btn_color']; ?>; }

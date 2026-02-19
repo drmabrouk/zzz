@@ -600,6 +600,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             <button class="sm-tab-btn <?php echo $sub == 'init' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('syndicate-settings', this)">تهيئة النظام</button>
                             <button class="sm-tab-btn <?php echo $sub == 'staff' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('system-users-settings', this)">إدارة مستخدمي النظام</button>
                             <button class="sm-tab-btn" onclick="smOpenInternalTab('professional-settings', this)">الدرجات والتخصصات</button>
+                            <button class="sm-tab-btn" onclick="smOpenInternalTab('notification-settings', this)">التنبيهات والبريد</button>
                             <button class="sm-tab-btn <?php echo $sub == 'design' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('design-settings', this)">التصميم والمظهر</button>
                             <button class="sm-tab-btn <?php echo $sub == 'backup' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('backup-settings', this)">مركز النسخ الاحتياطي</button>
                             <?php if ($is_admin): ?>
@@ -647,6 +648,10 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                         <div id="system-users-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'staff' ? 'block' : 'none'; ?>;">
                             <?php include SM_PLUGIN_DIR . 'templates/admin-staff.php'; ?>
+                        </div>
+
+                        <div id="notification-settings" class="sm-internal-tab" style="display:none;">
+                            <?php include SM_PLUGIN_DIR . 'templates/admin-notifications.php'; ?>
                         </div>
 
                         <div id="professional-settings" class="sm-internal-tab" style="display:none;">

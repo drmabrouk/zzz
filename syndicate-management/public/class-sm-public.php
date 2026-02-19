@@ -1449,6 +1449,14 @@ class SM_Public {
         wp_send_json_success('تم التحقق بنجاح. يرجى إكمال بيانات الحساب');
     }
 
+    public function ajax_get_template_ajax() {
+        if (!current_user_can('sm_manage_system')) wp_send_json_error('Unauthorized');
+        $type = sanitize_text_field($_POST['type']);
+        $template = SM_Notifications::get_template($type);
+        if ($template) wp_send_json_success($template);
+        else wp_send_json_error('Template not found');
+    }
+
     public function ajax_activate_account_final() {
         $national_id = sanitize_text_field($_POST['national_id'] ?? '');
         $membership_number = sanitize_text_field($_POST['membership_number'] ?? '');
@@ -1482,5 +1490,8 @@ class SM_Public {
         }
 
         wp_send_json_success('تم تفعيل الحساب بنجاح. يمكنك الآن تسجيل الدخول');
+
+        // Send Welcome Notification
+        SM_Notifications::send_template_notification($member->id, 'welcome_activation');
     }
 }

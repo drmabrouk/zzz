@@ -203,10 +203,90 @@ class SM_Activator {
             KEY status (status)
         ) $charset_collate;\n";
 
+        // Notification Templates Table
+        $table_name = $wpdb->prefix . 'sm_notification_templates';
+        $sql .= "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            template_type varchar(50) NOT NULL,
+            subject varchar(255) NOT NULL,
+            body text NOT NULL,
+            days_before int DEFAULT 0,
+            is_enabled tinyint(1) DEFAULT 1,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY template_type (template_type)
+        ) $charset_collate;\n";
+
+        // Notification Logs Table
+        $table_name = $wpdb->prefix . 'sm_notification_logs';
+        $sql .= "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            member_id mediumint(9),
+            notification_type varchar(50),
+            recipient_email varchar(100),
+            subject varchar(255),
+            sent_at datetime DEFAULT CURRENT_TIMESTAMP,
+            status varchar(20),
+            PRIMARY KEY  (id),
+            KEY member_id (member_id),
+            KEY sent_at (sent_at)
+        ) $charset_collate;\n";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
 
         self::setup_roles();
+        self::seed_notification_templates();
+    }
+
+    private static function seed_notification_templates() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sm_notification_templates';
+        $templates = [
+            'membership_renewal' => [
+                'subject' => 'تذكير: تجديد عضوية النقابة',
+                'body' => "عزيزي العضو {member_name}،\n\nنود تذكيركم بقرب موعد تجديد عضويتكم السنوية لعام {year}.\nيرجى السداد لتجنب الغرامات.\n\nشكراً لكم.",
+                'days_before' => 30
+            ],
+            'license_practice' => [
+                'subject' => 'تنبيه: انتهاء تصريح مزاولة المهنة',
+                'body' => "عزيزي العضو {member_name}،\n\nنحيطكم علماً بأن تصريح مزاولة المهنة الخاص بكم سينتهي في {expiry_date}.\nيرجى البدء في إجراءات التجديد.\n\nتحياتنا.",
+                'days_before' => 30
+            ],
+            'license_facility' => [
+                'subject' => 'تنبيه: انتهاء ترخيص المنشأة',
+                'body' => "عزيزي العضو {member_name}،\n\nنحيطكم علماً بأن ترخيص المنشأة {facility_name} سينتهي في {expiry_date}.\nيرجى مراجعة النقابة للتجديد.\n\nشكراً لكم.",
+                'days_before' => 30
+            ],
+            'payment_reminder' => [
+                'subject' => 'إشعار: مستحقات مالية متأخرة',
+                'body' => "عزيزي العضو {member_name}،\n\nيوجد مبالغ مستحقة على حسابكم بقيمة {balance} ج.م.\nنرجو السداد في أقرب وقت ممكن.\n\nإدارة النقابة.",
+                'days_before' => 0
+            ],
+            'welcome_activation' => [
+                'subject' => 'مرحباً بك في المنصة الرقمية لنقابتك',
+                'body' => "أهلاً بك يا {member_name}،\n\nتم تفعيل حسابك بنجاح في المنصة الرقمية.\nيمكنك الآن الاستفادة من كافة الخدمات الإلكترونية.\n\nرقم عضويتك: {membership_number}",
+                'days_before' => 0
+            ],
+            'admin_alert' => [
+                'subject' => 'تنبيه إداري من النقابة',
+                'body' => "عزيزي العضو {member_name}،\n\n{alert_message}\n\nشكراً لكم.",
+                'days_before' => 0
+            ]
+        ];
+
+        foreach ($templates as $type => $data) {
+            $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE template_type = %s", $type));
+            if (!$exists) {
+                $wpdb->insert($table, [
+                    'template_type' => $type,
+                    'subject' => $data['subject'],
+                    'body' => $data['body'],
+                    'days_before' => $data['days_before'],
+                    'is_enabled' => 1
+                ]);
+            }
+        }
     }
 
     private static function migrate_settings() {

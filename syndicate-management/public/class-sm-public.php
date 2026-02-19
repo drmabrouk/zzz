@@ -609,6 +609,16 @@ class SM_Public {
             'license_issue_date' => sanitize_text_field($_POST['license_issue_date']),
             'license_expiration_date' => sanitize_text_field($_POST['license_expiration_date'])
         ]);
+
+        // Archive License in Vault
+        SM_DB::add_document([
+            'member_id' => $member_id,
+            'category' => 'licenses',
+            'title' => "تصريح مزاولة مهنة رقم " . $_POST['license_number'],
+            'file_url' => admin_url('admin-ajax.php?action=sm_print_license&member_id=' . $member_id),
+            'file_type' => 'application/pdf'
+        ]);
+
         SM_Logger::log('تحديث ترخيص مزاولة', "العضو ID: $member_id");
         wp_send_json_success();
     }
@@ -626,6 +636,16 @@ class SM_Public {
             'facility_license_expiration_date' => sanitize_text_field($_POST['facility_license_expiration_date']),
             'facility_address' => sanitize_textarea_field($_POST['facility_address'])
         ]);
+
+        // Archive Facility License in Vault
+        SM_DB::add_document([
+            'member_id' => $member_id,
+            'category' => 'licenses',
+            'title' => "ترخيص منشأة: " . $_POST['facility_name'],
+            'file_url' => admin_url('admin-ajax.php?action=sm_print_facility&member_id=' . $member_id),
+            'file_type' => 'application/pdf'
+        ]);
+
         SM_Logger::log('تحديث منشأة', "العضو ID: $member_id");
         wp_send_json_success();
     }
@@ -930,6 +950,15 @@ class SM_Public {
                           'notes' => 'طلب رقم #' . $id
                       ]);
                  }
+
+                 // Archive Issued Document in Vault
+                 SM_DB::add_document([
+                     'member_id' => $req->member_id,
+                     'category' => 'certificates',
+                     'title' => $service->name . " - طلب رقم #" . $id,
+                     'file_url' => admin_url('admin-ajax.php?action=sm_print_service_request&id=' . $id),
+                     'file_type' => 'application/pdf'
+                 ]);
              }
              wp_send_json_success();
         } else wp_send_json_error('Failed to process request');
@@ -1493,5 +1522,85 @@ class SM_Public {
 
         // Send Welcome Notification
         SM_Notifications::send_template_notification($member->id, 'welcome_activation');
+    }
+
+    public function ajax_upload_document() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_document_action', 'nonce');
+
+        $member_id = intval($_POST['member_id']);
+        if (!$this->can_access_member($member_id)) wp_send_json_error('Access denied');
+
+        if (empty($_FILES['document_file']['name'])) wp_send_json_error('No file uploaded');
+
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+        $attachment_id = media_handle_upload('document_file', 0);
+        if (is_wp_error($attachment_id)) wp_send_json_error($attachment_id->get_error_message());
+
+        $file_url = wp_get_attachment_url($attachment_id);
+        $file_type = get_post_mime_type($attachment_id);
+
+        $doc_id = SM_DB::add_document([
+            'member_id' => $member_id,
+            'category' => sanitize_text_field($_POST['category']),
+            'title' => sanitize_text_field($_POST['title']),
+            'file_url' => $file_url,
+            'file_type' => $file_type
+        ]);
+
+        if ($doc_id) wp_send_json_success(['doc_id' => $doc_id]);
+        else wp_send_json_error('Failed to save document info');
+    }
+
+    public function ajax_get_documents() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+        $member_id = intval($_GET['member_id']);
+        if (!$this->can_access_member($member_id)) wp_send_json_error('Access denied');
+
+        $args = [
+            'category' => $_GET['category'] ?? '',
+            'search' => $_GET['search'] ?? ''
+        ];
+
+        wp_send_json_success(SM_DB::get_member_documents($member_id, $args));
+    }
+
+    public function ajax_delete_document() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_document_action', 'nonce');
+
+        $doc_id = intval($_POST['doc_id']);
+        global $wpdb;
+        $doc = $wpdb->get_row($wpdb->prepare("SELECT member_id FROM {$wpdb->prefix}sm_documents WHERE id = %d", $doc_id));
+        if (!$doc || !$this->can_access_member($doc->member_id)) wp_send_json_error('Access denied');
+
+        if (SM_DB::delete_document($doc_id)) wp_send_json_success();
+        else wp_send_json_error('Delete failed');
+    }
+
+    public function ajax_get_document_logs() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+        $doc_id = intval($_GET['doc_id']);
+
+        global $wpdb;
+        $doc = $wpdb->get_row($wpdb->prepare("SELECT member_id FROM {$wpdb->prefix}sm_documents WHERE id = %d", $doc_id));
+        if (!$doc || !$this->can_access_member($doc->member_id)) wp_send_json_error('Access denied');
+
+        wp_send_json_success(SM_DB::get_document_logs($doc_id));
+    }
+
+    public function ajax_log_document_view() {
+        if (!is_user_logged_in()) wp_send_json_error('Unauthorized');
+        $doc_id = intval($_POST['doc_id']);
+
+        global $wpdb;
+        $doc = $wpdb->get_row($wpdb->prepare("SELECT member_id FROM {$wpdb->prefix}sm_documents WHERE id = %d", $doc_id));
+        if (!$doc || !$this->can_access_member($doc->member_id)) wp_send_json_error('Access denied');
+
+        SM_DB::log_document_action($doc_id, 'view');
+        wp_send_json_success();
     }
 }

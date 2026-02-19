@@ -294,6 +294,41 @@ class SM_Activator {
 
         self::setup_roles();
         self::seed_notification_templates();
+        self::seed_publishing_templates();
+    }
+
+    private static function seed_publishing_templates() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sm_pub_templates';
+
+        $templates = [
+            'experience_cert' => [
+                'title' => 'شهادة خبرة معتمدة',
+                'doc_type' => 'certificate',
+                'content' => '<div style="text-align:center;"><p>تشهد النقابة العامة بأن السيد العضو / <strong>{MEMBER_NAME}</strong></p><p>المقيد برقم قيد: {MEMBERSHIP_NO} ومحافظة: {GOVERNORATE}</p><p>قد اجتاز كافة المتطلبات المهنية المقررة ويعتبر ممارساً معتمداً في تخصصه.</p></div>'
+            ],
+            'official_report' => [
+                'title' => 'تقرير فني رسمي',
+                'doc_type' => 'report',
+                'content' => '<h3>موضوع التقرير: ....................</h3><p>بناءً على المعاينة الفنية والمهنية لعضو النقابة {MEMBER_NAME}، نفيد بالآتي:</p><ul><li>أولاً: .............</li><li>ثانياً: .............</li></ul>'
+            ],
+            'internal_memo' => [
+                'title' => 'مذكرة عرض داخلية',
+                'doc_type' => 'memo',
+                'content' => '<h3>مذكرة عرض إلى: السيد مدير عام النقابة</h3><p>بشأن: .........................</p><p>بالإشارة إلى الطلب المقدم من {MEMBER_NAME}، نحيط سيادتكم علماً بـ .............</p><p style="text-align:left;">وتفضلوا بقبول فائق الاحترام،،</p>'
+            ]
+        ];
+
+        foreach ($templates as $key => $data) {
+            $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE title = %s", $data['title']));
+            if (!$exists) {
+                $wpdb->insert($table, [
+                    'title' => $data['title'],
+                    'doc_type' => $data['doc_type'],
+                    'content' => $data['content']
+                ]);
+            }
+        }
     }
 
     private static function seed_notification_templates() {

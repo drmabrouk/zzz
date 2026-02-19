@@ -12,6 +12,14 @@ if (!$is_sys_manager) {
 
 $where = "1=1";
 
+// Governorate filtering for non-global admins
+if (!current_user_can('sm_full_access') && !current_user_can('manage_options')) {
+    $my_gov = get_user_meta($user->ID, 'sm_governorate', true);
+    if ($my_gov) {
+        $where .= $wpdb->prepare(" AND EXISTS (SELECT 1 FROM {$wpdb->prefix}sm_members m WHERE m.id = p.member_id AND m.governorate = %s)", $my_gov);
+    }
+}
+
 $day = isset($_GET['log_day']) ? intval($_GET['log_day']) : '';
 $month = isset($_GET['log_month']) ? intval($_GET['log_month']) : '';
 $year = isset($_GET['log_year']) ? intval($_GET['log_year']) : '';
@@ -107,7 +115,7 @@ $total_period_amount = array_reduce($payments, function($carry, $item) { return 
                             <td style="font-size: 10px; color: #d69e2e; font-family: monospace; font-weight: 700;"><?php echo esc_html($p->paper_invoice_code ?: '---'); ?></td>
                             <td style="font-weight: 800; color: #38a169;"><?php echo number_format($p->amount, 2); ?></td>
                             <td>
-                                <?php if ($is_sys_manager): ?>
+                                <?php if (current_user_can('sm_full_access') || current_user_can('manage_options')): ?>
                                     <button onclick="smDeleteTransaction(<?php echo $p->id; ?>)" class="sm-btn sm-btn-outline" style="color:#e53e3e; border-color:#feb2b2; padding:2px 8px; font-size:11px;">حذف/تراجع</button>
                                 <?php else: ?>
                                     <span style="font-size: 10px; color: #999;">لا توجد صلاحية</span>

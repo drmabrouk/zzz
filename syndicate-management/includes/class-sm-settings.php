@@ -198,6 +198,39 @@ class SM_Settings {
         );
     }
 
+    public static function get_governorate_prefix($gov_key) {
+        $prefixes = array(
+            'cairo' => 'CAI',
+            'giza' => 'GIZ',
+            'alexandria' => 'ALX',
+            'monufia' => 'MNF',
+            'dakahlia' => 'DKH',
+            'sharqia' => 'SHR',
+            'beheira' => 'BEH',
+            'qalyubia' => 'QAL',
+            'gharbia' => 'GHA',
+            'fayoum' => 'FAY',
+            'minya' => 'MIN',
+            'asyut' => 'ASY',
+            'sohag' => 'SOH',
+            'qena' => 'QEN',
+            'luxor' => 'LXR',
+            'aswan' => 'ASW',
+            'damietta' => 'DAM',
+            'port_said' => 'PSD',
+            'ismailia' => 'ISM',
+            'suez' => 'SUE',
+            'kafr_el_sheikh' => 'KFS',
+            'matrouh' => 'MAT',
+            'red_sea' => 'RED',
+            'new_valley' => 'NVAL',
+            'north_sinai' => 'NSIN',
+            'south_sinai' => 'SSIN',
+            'beni_suef' => 'BSF'
+        );
+        return $prefixes[$gov_key] ?? 'GEN';
+    }
+
     public static function get_finance_settings() {
         $default = array(
             'membership_new' => 480,

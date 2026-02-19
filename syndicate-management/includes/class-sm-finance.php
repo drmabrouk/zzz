@@ -137,13 +137,17 @@ class SM_Finance {
         $table = $wpdb->prefix . 'sm_payments';
         $current_user_id = get_current_user_id();
 
-        // Sequential Invoice Number: YYYY0000X
+        // Sequential Invoice Number: [GOV]-YYYY0000X
+        $member = SM_DB::get_member_by_id($data['member_id']);
+        $gov_key = $member->governorate ?? 'generic';
+        $prefix = SM_Settings::get_governorate_prefix($gov_key);
+
         $current_year = date('Y');
         $last_seq = (int)get_option('sm_invoice_sequence_' . $current_year, 0);
         $new_seq = $last_seq + 1;
         update_option('sm_invoice_sequence_' . $current_year, $new_seq);
 
-        $digital_code = $current_year . str_pad($new_seq, 5, '0', STR_PAD_LEFT);
+        $digital_code = $prefix . '-' . $current_year . str_pad($new_seq, 5, '0', STR_PAD_LEFT);
 
         $paper_code = sanitize_text_field($data['paper_invoice_code'] ?? '');
         $details_ar = sanitize_text_field($data['details_ar'] ?? '');

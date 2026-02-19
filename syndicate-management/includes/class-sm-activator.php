@@ -157,6 +157,7 @@ class SM_Activator {
             description text,
             fees decimal(10,2) DEFAULT 0,
             required_fields text,
+            selected_profile_fields text,
             status enum('active', 'suspended') DEFAULT 'active',
             created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
             PRIMARY KEY  (id)

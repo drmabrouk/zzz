@@ -1551,8 +1551,12 @@ class SM_Public {
             'file_type' => $file_type
         ]);
 
-        if ($doc_id) wp_send_json_success(['doc_id' => $doc_id]);
-        else wp_send_json_error('Failed to save document info');
+        if ($doc_id) {
+            wp_send_json_success(['doc_id' => $doc_id]);
+        } else {
+            global $wpdb;
+            wp_send_json_error('Failed to save document info: ' . $wpdb->last_error);
+        }
     }
 
     public function ajax_get_documents() {

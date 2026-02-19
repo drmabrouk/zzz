@@ -58,6 +58,10 @@ class SM_Notifications {
 
         $html_message = self::wrap_in_template($subject, $body, $email_settings, $syndicate);
 
+        // Professional Sender info
+        add_filter('wp_mail_from', function() { return 'no-reply@irseg.org'; });
+        add_filter('wp_mail_from_name', function() use ($syndicate) { return $syndicate['syndicate_name']; });
+
         $headers = array('Content-Type: text/html; charset=UTF-8');
         $sent = wp_mail($member->email, $subject, $html_message, $headers);
 
@@ -67,26 +71,44 @@ class SM_Notifications {
     }
 
     private static function wrap_in_template($subject, $body, $design, $syndicate) {
-        $logo_html = !empty($syndicate['syndicate_logo']) ? '<img src="'.esc_url($syndicate['syndicate_logo']).'" style="max-height:60px; margin-bottom:10px;">' : '';
+        $logo_html = !empty($syndicate['syndicate_logo']) ? '<img src="'.esc_url($syndicate['syndicate_logo']).'" style="max-height:80px; margin-bottom:15px; display:inline-block;">' : '';
 
         ob_start();
         ?>
-        <div dir="rtl" style="font-family: 'Arial', sans-serif; background: #f4f7f6; padding: 40px 20px; color: #333;">
-            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <div style="background: <?php echo $design['header_bg']; ?>; color: <?php echo $design['header_text']; ?>; padding: 40px 30px; text-align: center;">
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { margin: 0; padding: 0; background-color: #f6f9fc; }
+                .email-container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 15px; overflow: hidden; border: 1px solid #e1e8ed; }
+                .header { background-color: <?php echo $design['header_bg']; ?>; color: <?php echo $design['header_text']; ?>; padding: 40px 20px; text-align: center; }
+                .content { padding: 40px; line-height: 1.7; color: #1a202c; font-size: 16px; text-align: right; }
+                .footer { background-color: #f8fafc; padding: 25px; text-align: center; font-size: 12px; color: <?php echo $design['footer_text']; ?>; border-top: 1px solid #edf2f7; }
+                .btn { display: inline-block; padding: 12px 30px; background-color: <?php echo $design['accent_color']; ?>; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <div class="email-container">
+                <div class="header">
                     <?php echo $logo_html; ?>
-                    <h2 style="margin: 0; font-size: 20px;"><?php echo esc_html($syndicate['syndicate_name']); ?></h2>
+                    <h1 style="margin: 0; font-size: 22px; font-weight: 800;"><?php echo esc_html($syndicate['syndicate_name']); ?></h1>
                 </div>
-                <div style="padding: 40px 30px; line-height: 1.8; font-size: 16px;">
-                    <h3 style="color: <?php echo $design['accent_color']; ?>; margin-top: 0; margin-bottom: 20px;"><?php echo esc_html($subject); ?></h3>
-                    <?php echo nl2br(esc_html($body)); ?>
+                <div class="content">
+                    <h2 style="color: <?php echo $design['accent_color']; ?>; margin-top: 0;"><?php echo esc_html($subject); ?></h2>
+                    <div style="white-space: pre-line;">
+                        <?php echo esc_html($body); ?>
+                    </div>
                 </div>
-                <div style="padding: 20px 30px; background: #f8fafc; text-align: center; font-size: 12px; color: <?php echo $design['footer_text']; ?>; border-top: 1px solid #edf2f7;">
-                    <p style="margin: 0;"><?php echo esc_html($syndicate['address']); ?> | <?php echo esc_html($syndicate['phone']); ?></p>
-                    <p style="margin: 5px 0 0 0;">© <?php echo date('Y'); ?> <?php echo esc_html($syndicate['syndicate_name']); ?>. جميع الحقوق محفوظة.</p>
+                <div class="footer">
+                    <p style="margin: 0 0 10px 0; font-weight: 700;"><?php echo esc_html($syndicate['syndicate_name']); ?></p>
+                    <p style="margin: 5px 0;"><?php echo esc_html($syndicate['address']); ?></p>
+                    <p style="margin: 5px 0;">هاتف: <?php echo esc_html($syndicate['phone']); ?> | بريد: <?php echo esc_html($syndicate['email']); ?></p>
+                    <p style="margin: 15px 0 0 0; opacity: 0.8;">هذه رسالة تلقائية، يرجى عدم الرد عليها مباشرة.</p>
                 </div>
             </div>
-        </div>
+        </body>
+        </html>
         <?php
         return ob_get_clean();
     }

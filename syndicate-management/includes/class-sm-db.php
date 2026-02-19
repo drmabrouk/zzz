@@ -784,4 +784,84 @@ class SM_DB {
             intval($doc_id)
         ));
     }
+
+    // Publishing Center Methods
+    public static function save_pub_template($data) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sm_pub_templates';
+        if (!empty($data['id'])) {
+            return $wpdb->update($table, [
+                'title' => sanitize_text_field($data['title']),
+                'content' => $data['content'],
+                'doc_type' => sanitize_text_field($data['doc_type']),
+                'settings' => $data['settings']
+            ], ['id' => intval($data['id'])]);
+        } else {
+            return $wpdb->insert($table, [
+                'title' => sanitize_text_field($data['title']),
+                'content' => $data['content'],
+                'doc_type' => sanitize_text_field($data['doc_type']),
+                'settings' => $data['settings']
+            ]);
+        }
+    }
+
+    public static function get_pub_templates() {
+        global $wpdb;
+        return $wpdb->get_results("SELECT * FROM {$wpdb->prefix}sm_pub_templates ORDER BY created_at DESC");
+    }
+
+    public static function get_pub_template($id) {
+        global $wpdb;
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_pub_templates WHERE id = %d", $id));
+    }
+
+    public static function generate_pub_document($data) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sm_pub_documents';
+
+        // Generate Unique Serial: PUB-YYYY-XXXXX
+        $year = date('Y');
+        $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table");
+        $serial = 'PUB-' . $year . '-' . str_pad(($last_id + 1), 5, '0', STR_PAD_LEFT);
+
+        $res = $wpdb->insert($table, [
+            'template_id' => intval($data['template_id'] ?? 0),
+            'serial_number' => $serial,
+            'title' => sanitize_text_field($data['title']),
+            'content' => $data['content'],
+            'created_by' => get_current_user_id(),
+            'created_at' => current_time('mysql')
+        ]);
+
+        return $res ? $serial : false;
+    }
+
+    public static function get_pub_documents($args = []) {
+        global $wpdb;
+        $where = "1=1";
+        if (!empty($args['search'])) {
+            $where .= $wpdb->prepare(" AND (d.title LIKE %s OR d.serial_number LIKE %s)", '%' . $wpdb->esc_like($args['search']) . '%', '%' . $wpdb->esc_like($args['search']) . '%');
+        }
+        return $wpdb->get_results("
+            SELECT d.*, u.display_name as creator_name
+            FROM {$wpdb->prefix}sm_pub_documents d
+            LEFT JOIN {$wpdb->prefix}users u ON d.created_by = u.ID
+            WHERE $where
+            ORDER BY d.created_at DESC
+        ");
+    }
+
+    public static function get_pub_document_by_serial($serial) {
+        global $wpdb;
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_pub_documents WHERE serial_number = %s", $serial));
+    }
+
+    public static function increment_pub_download($id, $format) {
+        global $wpdb;
+        return $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}sm_pub_documents SET download_count = download_count + 1, last_format = %s WHERE id = %d",
+            $format, $id
+        ));
+    }
 }

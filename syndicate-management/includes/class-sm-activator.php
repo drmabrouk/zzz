@@ -260,6 +260,34 @@ class SM_Activator {
             KEY document_id (document_id)
         ) $charset_collate;\n";
 
+        // Publishing Center Templates
+        $table_name = $wpdb->prefix . 'sm_pub_templates';
+        $sql .= "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            title varchar(255) NOT NULL,
+            content longtext NOT NULL,
+            doc_type varchar(50) DEFAULT 'other',
+            settings text,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id)
+        ) $charset_collate;\n";
+
+        // Publishing Center Generated Documents
+        $table_name = $wpdb->prefix . 'sm_pub_documents';
+        $sql .= "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            template_id mediumint(9),
+            serial_number varchar(50) NOT NULL,
+            title varchar(255) NOT NULL,
+            content longtext NOT NULL,
+            created_by bigint(20),
+            download_count int DEFAULT 0,
+            last_format varchar(20),
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY serial_number (serial_number)
+        ) $charset_collate;\n";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
 

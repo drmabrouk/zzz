@@ -32,7 +32,7 @@ class SM_Settings {
             'tab_practice_licenses' => 'تصاريح مزاولة المهنة',
             'tab_facility_licenses' => 'تراخيص المنشآت',
             'tab_staffs' => 'إدارة مستخدمي النظام',
-            'tab_printing' => 'مركز الطباعة',
+            'tab_printing' => 'مركز الطباعة والنشر الرقمي',
             'tab_surveys' => 'استطلاعات الرأي',
             'tab_global_settings' => 'إعدادات النظام',
             'tab_update_requests' => 'طلبات التحديث',

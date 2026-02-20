@@ -490,14 +490,26 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                     </li>
                 <?php endif; ?>
 
-                <?php if ($is_admin || $is_sys_admin): ?>
+                <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin): ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'global-settings' ? 'sm-active' : ''; ?>">
-                        <a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-generic"></span> <?php echo $labels['tab_global_settings']; ?></a>
+                        <a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-admin-generic"></span> إعدادات النظام</a>
                         <ul class="sm-sidebar-dropdown" style="display: <?php echo $active_tab == 'global-settings' ? 'block' : 'none'; ?>;">
                             <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=init" class="<?php echo (!isset($_GET['sub']) || $_GET['sub'] == 'init') ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-admin-tools"></span> تهيئة النظام</a></li>
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=staff" class="<?php echo ($_GET['sub'] ?? '') == 'staff' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-admin-users"></span> <?php echo $labels['tab_staffs']; ?></a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=professional" class="<?php echo ($_GET['sub'] ?? '') == 'professional' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-businessman"></span> الدرجات والتخصصات</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=finance" class="<?php echo ($_GET['sub'] ?? '') == 'finance' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-money-alt"></span> الرسوم والغرامات</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=notifications" class="<?php echo ($_GET['sub'] ?? '') == 'notifications' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-email"></span> التنبيهات والبريد</a></li>
                             <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=design" class="<?php echo ($_GET['sub'] ?? '') == 'design' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-art"></span> التصميم والمظهر</a></li>
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'global-settings'); ?>&sub=backup" class="<?php echo ($_GET['sub'] ?? '') == 'backup' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-database-export"></span> النسخ الاحتياطي</a></li>
+                        </ul>
+                    </li>
+                <?php endif; ?>
+
+                <?php if ($is_admin || $is_sys_admin): ?>
+                    <li class="sm-sidebar-item <?php echo $active_tab == 'advanced-settings' ? 'sm-active' : ''; ?>">
+                        <a href="<?php echo add_query_arg('sm_tab', 'advanced-settings'); ?>" class="sm-sidebar-link" style="color: #c53030 !important;"><span class="dashicons dashicons-shield-alt"></span> الإعدادات المتقدمة</a>
+                        <ul class="sm-sidebar-dropdown" style="display: <?php echo $active_tab == 'advanced-settings' ? 'block' : 'none'; ?>;">
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'advanced-settings'); ?>&sub=staff" class="<?php echo (!isset($_GET['sub']) || $_GET['sub'] == 'staff') ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-admin-users"></span> إدارة مستخدمي النظام</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'advanced-settings'); ?>&sub=backup" class="<?php echo ($_GET['sub'] ?? '') == 'backup' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-database-export"></span> مركز النسخ الاحتياطي</a></li>
+                            <li><a href="<?php echo add_query_arg('sm_tab', 'advanced-settings'); ?>&sub=logs" class="<?php echo ($_GET['sub'] ?? '') == 'logs' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-list-view"></span> سجل النشاطات (Activity Log)</a></li>
                         </ul>
                     </li>
                 <?php endif; ?>
@@ -587,170 +599,21 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                     }
                     break;
 
-                case 'membership-requests':
-                    if ($is_admin || $is_sys_admin || $is_syndicate_admin) {
-                        include SM_PLUGIN_DIR . 'templates/admin-membership-requests.php';
-                    }
-                    break;
-
-                case 'update-requests':
-                    if ($is_admin || $is_sys_admin || $is_syndicate_admin) {
-                        include SM_PLUGIN_DIR . 'templates/admin-update-requests.php';
-                    }
-                    break;
-
-                case 'global-settings':
-                    if ($is_admin || current_user_can('sm_manage_system')) {
-                        $sub = $_GET['sub'] ?? 'init';
+                case 'advanced-settings':
+                    if ($is_admin || $is_sys_admin) {
+                        $sub = $_GET['sub'] ?? 'staff';
                         ?>
                         <div class="sm-tabs-wrapper" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; overflow-x: auto; white-space: nowrap; padding-bottom: 10px;">
-                            <button class="sm-tab-btn <?php echo $sub == 'init' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('syndicate-settings', this)">تهيئة النظام</button>
-                            <button class="sm-tab-btn <?php echo $sub == 'staff' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('system-users-settings', this)">إدارة مستخدمي النظام</button>
-                            <button class="sm-tab-btn" onclick="smOpenInternalTab('professional-settings', this)">الدرجات والتخصصات</button>
-                            <button class="sm-tab-btn <?php echo $sub == 'finance' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('finance-settings', this)">الرسوم والغرامات</button>
-                            <button class="sm-tab-btn" onclick="smOpenInternalTab('notification-settings', this)">التنبيهات والبريد</button>
-                            <button class="sm-tab-btn <?php echo $sub == 'design' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('design-settings', this)">التصميم والمظهر</button>
-                            <button class="sm-tab-btn <?php echo $sub == 'backup' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('backup-settings', this)">مركز النسخ الاحتياطي</button>
-                            <?php if ($is_admin): ?>
-                                <button class="sm-tab-btn" onclick="smOpenInternalTab('activity-logs', this)">سجل النشاطات</button>
-                            <?php endif; ?>
+                            <button class="sm-tab-btn <?php echo ($sub == 'staff') ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('system-users-settings', this)">إدارة مستخدمي النظام</button>
+                            <button class="sm-tab-btn <?php echo ($sub == 'backup') ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('backup-settings', this)">مركز النسخ الاحتياطي</button>
+                            <button class="sm-tab-btn <?php echo ($sub == 'logs') ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('activity-logs', this)">سجل النشاطات</button>
                         </div>
 
-                        <div id="syndicate-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'init' ? 'block' : 'none'; ?>;">
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
-                                <form method="post" style="grid-column: span 2;">
-                                    <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
-                                    <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">بيانات السلطة والنقابة</h4>
-                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:15px;">
-                                        <div class="sm-form-group"><label class="sm-label">اسم النقابة:</label><input type="text" name="syndicate_name" value="<?php echo esc_attr($syndicate['syndicate_name']); ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">اسم مسؤول النقابة:</label><input type="text" name="syndicate_officer_name" value="<?php echo esc_attr($syndicate['syndicate_officer_name'] ?? ''); ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">رقم الهاتف:</label><input type="text" name="syndicate_phone" value="<?php echo esc_attr($syndicate['phone']); ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">البريد الإلكتروني:</label><input type="email" name="syndicate_email" value="<?php echo esc_attr($syndicate['email']); ?>" class="sm-input"></div>
-                                        <div class="sm-form-group">
-                                            <label class="sm-label">شعار النقابة:</label>
-                                            <div style="display:flex; gap:10px;">
-                                                <input type="text" name="syndicate_logo" id="sm_syndicate_logo_url" value="<?php echo esc_attr($syndicate['syndicate_logo']); ?>" class="sm-input">
-                                                <button type="button" onclick="smOpenMediaUploader('sm_syndicate_logo_url')" class="sm-btn" style="width:auto; font-size:12px; background:var(--sm-secondary-color);">رفع/اختيار</button>
-                                            </div>
-                                        </div>
-                                        <div class="sm-form-group"><label class="sm-label">العنوان:</label><input type="text" name="syndicate_address" value="<?php echo esc_attr($syndicate['address']); ?>" class="sm-input"></div>
-                                    </div>
-                                    <button type="submit" name="sm_save_settings_unified" class="sm-btn" style="width:auto; margin-top:20px;">حفظ بيانات السلطة</button>
-                                </form>
-
-                                <form method="post" style="grid-column: span 2; margin-top:30px; border-top: 1px solid #eee; padding-top:20px;">
-                                    <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
-                                    <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">مسميات أقسام النظام (Dynamic Labels)</h4>
-                                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-top:15px;">
-                                        <?php foreach($labels as $key => $val): ?>
-                                            <div class="sm-form-group">
-                                                <label class="sm-label" style="font-size:11px;"><?php echo str_replace('tab_', '', $key); ?>:</label>
-                                                <input type="text" name="<?php echo $key; ?>" value="<?php echo esc_attr($val); ?>" class="sm-input" style="padding:8px; font-size:12px;">
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                    <button type="submit" name="sm_save_labels" class="sm-btn" style="width:auto; margin-top:10px; background: #2c3e50;">حفظ المسميات الجديدة</button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div id="system-users-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'staff' ? 'block' : 'none'; ?>;">
+                        <div id="system-users-settings" class="sm-internal-tab" style="display: <?php echo ($sub == 'staff') ? 'block' : 'none'; ?>;">
                             <?php include SM_PLUGIN_DIR . 'templates/admin-staff.php'; ?>
                         </div>
 
-                        <div id="finance-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'finance' ? 'block' : 'none'; ?>;">
-                            <?php
-                            $fin = SM_Settings::get_finance_settings();
-                            ?>
-                            <form method="post" style="max-width: 800px;">
-                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
-                                <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">تخصيص رسوم الخدمات والغرامات</h4>
-
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px; margin-top:20px;">
-                                    <div style="grid-column: span 2; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                        <h5 style="margin:0 0 10px 0;">💳 اشتراكات العضوية السنوية</h5>
-                                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
-                                            <div class="sm-form-group"><label class="sm-label">قيد جديد:</label><input type="number" name="membership_new" value="<?php echo $fin['membership_new']; ?>" class="sm-input"></div>
-                                            <div class="sm-form-group"><label class="sm-label">تجديد سنوي:</label><input type="number" name="membership_renewal" value="<?php echo $fin['membership_renewal']; ?>" class="sm-input"></div>
-                                            <div class="sm-form-group"><label class="sm-label">غرامة تأخير:</label><input type="number" name="membership_penalty" value="<?php echo $fin['membership_penalty']; ?>" class="sm-input"></div>
-                                        </div>
-                                        <p style="font-size: 11px; color: #e53e3e; margin-top: 5px;">* ملاحظة: تطبق غرامة التأخير تلقائياً بعد انتهاء فترة السماح (1 أبريل من كل عام).</p>
-                                    </div>
-
-                                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                        <h5 style="margin:0 0 10px 0;">📜 تراخيص مزاولة المهنة</h5>
-                                        <div class="sm-form-group"><label class="sm-label">إصدار لأول مرة:</label><input type="number" name="license_new" value="<?php echo $fin['license_new']; ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">تجديد (كل سنتين):</label><input type="number" name="license_renewal" value="<?php echo $fin['license_renewal']; ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">غرامة تأخير سنوية:</label><input type="number" name="license_penalty" value="<?php echo $fin['license_penalty']; ?>" class="sm-input"></div>
-                                    </div>
-
-                                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                        <h5 style="margin:0 0 10px 0;">🏢 تراخيص المنشآت (حسب الفئة)</h5>
-                                        <div class="sm-form-group"><label class="sm-label">الفئة (A):</label><input type="number" name="facility_a" value="<?php echo $fin['facility_a']; ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">الفئة (B):</label><input type="number" name="facility_b" value="<?php echo $fin['facility_b']; ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">الفئة (C):</label><input type="number" name="facility_c" value="<?php echo $fin['facility_c']; ?>" class="sm-input"></div>
-                                    </div>
-                                </div>
-
-                                <button type="submit" name="sm_save_finance_settings" class="sm-btn" style="width:auto; margin-top:25px; padding: 0 40px; height: 45px;">حفظ تسعيرة الخدمات</button>
-                            </form>
-                        </div>
-
-                        <div id="notification-settings" class="sm-internal-tab" style="display:none;">
-                            <?php include SM_PLUGIN_DIR . 'templates/admin-notifications.php'; ?>
-                        </div>
-
-                        <div id="professional-settings" class="sm-internal-tab" style="display:none;">
-                            <form method="post">
-                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
-                                    <div class="sm-form-group">
-                                        <label class="sm-label">الدرجات الوظيفية (درجة واحدة في كل سطر):</label>
-                                        <textarea name="professional_grades" class="sm-textarea" rows="8"><?php
-                                            foreach (SM_Settings::get_professional_grades() as $k => $v) echo "$k|$v\n";
-                                        ?></textarea>
-                                        <p style="font-size:11px; color:#666; margin-top:5px;">التنسيق: key|Label (مثال: expert|خبير)</p>
-                                    </div>
-                                    <div class="sm-form-group">
-                                        <label class="sm-label">التخصصات المهنية (تخصص واحد في كل سطر):</label>
-                                        <textarea name="specializations" class="sm-textarea" rows="8"><?php
-                                            foreach (SM_Settings::get_specializations() as $k => $v) echo "$k|$v\n";
-                                        ?></textarea>
-                                        <p style="font-size:11px; color:#666; margin-top:5px;">التنسيق: key|Label (مثال: massage|تدليك رياضي)</p>
-                                    </div>
-                                </div>
-                                <button type="submit" name="sm_save_professional_options" class="sm-btn" style="width:auto; margin-top:10px;">حفظ الخيارات المهنية</button>
-                            </form>
-                        </div>
-
-                        <div id="design-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'design' ? 'block' : 'none'; ?>;">
-                            <form method="post">
-                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
-                                <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">إعدادات الألوان والمظهر الشاملة</h4>
-                                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-top:20px;">
-                                    <div class="sm-form-group"><label class="sm-label">الأساسي:</label><input type="color" name="primary_color" value="<?php echo esc_attr($appearance['primary_color']); ?>" class="sm-input" style="height:40px;"></div>
-                                    <div class="sm-form-group"><label class="sm-label">الثانوي:</label><input type="color" name="secondary_color" value="<?php echo esc_attr($appearance['secondary_color']); ?>" class="sm-input" style="height:40px;"></div>
-                                    <div class="sm-form-group"><label class="sm-label">التمييز:</label><input type="color" name="accent_color" value="<?php echo esc_attr($appearance['accent_color']); ?>" class="sm-input" style="height:40px;"></div>
-                                    <div class="sm-form-group"><label class="sm-label">الهيدر:</label><input type="color" name="dark_color" value="<?php echo esc_attr($appearance['dark_color']); ?>" class="sm-input" style="height:40px;"></div>
-
-                                    <div class="sm-form-group"><label class="sm-label">خلفية النظام:</label><input type="color" name="bg_color" value="<?php echo esc_attr($appearance['bg_color']); ?>" class="sm-input" style="height:40px;"></div>
-                                    <div class="sm-form-group"><label class="sm-label">خلفية السايدبار:</label><input type="color" name="sidebar_bg_color" value="<?php echo esc_attr($appearance['sidebar_bg_color']); ?>" class="sm-input" style="height:40px;"></div>
-                                    <div class="sm-form-group"><label class="sm-label">لون الخط:</label><input type="color" name="font_color" value="<?php echo esc_attr($appearance['font_color']); ?>" class="sm-input" style="height:40px;"></div>
-                                    <div class="sm-form-group"><label class="sm-label">لون الحدود:</label><input type="color" name="border_color" value="<?php echo esc_attr($appearance['border_color']); ?>" class="sm-input" style="height:40px;"></div>
-                                </div>
-
-                                <h4 style="margin-top:30px; border-bottom:1px solid #eee; padding-bottom:10px;">الخطوط والخطوط المطبعية (Typography)</h4>
-                                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-top:20px;">
-                                    <div class="sm-form-group"><label class="sm-label">حجم الخط (مثال: 15px):</label><input type="text" name="font_size" value="<?php echo esc_attr($appearance['font_size']); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">وزن الخط (400, 700...):</label><input type="text" name="font_weight" value="<?php echo esc_attr($appearance['font_weight']); ?>" class="sm-input"></div>
-                                    <div class="sm-form-group"><label class="sm-label">تباعد الأسطر (1.5...):</label><input type="text" name="line_spacing" value="<?php echo esc_attr($appearance['line_spacing']); ?>" class="sm-input"></div>
-                                </div>
-
-                                <button type="submit" name="sm_save_appearance" class="sm-btn" style="width:auto; margin-top:20px;">حفظ كافة تعديلات التصميم</button>
-                            </form>
-                        </div>
-
-                        <div id="backup-settings" class="sm-internal-tab" style="display:none;">
+                        <div id="backup-settings" class="sm-internal-tab" style="display: <?php echo ($sub == 'backup') ? 'block' : 'none'; ?>;">
                             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:30px;">
                                 <h4 style="margin-top:0;">مركز النسخ الاحتياطي وإدارة البيانات</h4>
                                 <?php $backup_info = SM_Settings::get_last_backup_info(); ?>
@@ -809,8 +672,8 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                 </div>
                             </div>
                         </div>
-                        <?php if ($is_admin): ?>
-                        <div id="activity-logs" class="sm-internal-tab" style="display:none;">
+
+                        <div id="activity-logs" class="sm-internal-tab" style="display: <?php echo ($sub == 'logs') ? 'block' : 'none'; ?>;">
                             <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:15px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                                     <div>
@@ -819,7 +682,8 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                     </div>
                                     <div style="display:flex; gap:10px;">
                                         <form method="get" style="display:flex; gap:5px;">
-                                            <input type="hidden" name="sm_tab" value="global-settings">
+                                            <input type="hidden" name="sm_tab" value="advanced-settings">
+                                            <input type="hidden" name="sub" value="logs">
                                             <input type="text" name="log_search" value="<?php echo esc_attr($_GET['log_search'] ?? ''); ?>" placeholder="بحث في السجلات..." class="sm-input" style="width:200px; padding:5px 10px; font-size:12px;">
                                             <button type="submit" class="sm-btn" style="width:auto; padding:5px 15px; font-size:12px;">بحث</button>
                                         </form>
@@ -886,7 +750,164 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                                 <?php endif; ?>
                             </div>
                         </div>
-                        <?php endif; ?>
+                        <?php
+                    }
+                    break;
+
+                case 'membership-requests':
+                    if ($is_admin || $is_sys_admin || $is_syndicate_admin) {
+                        include SM_PLUGIN_DIR . 'templates/admin-membership-requests.php';
+                    }
+                    break;
+
+                case 'update-requests':
+                    if ($is_admin || $is_sys_admin || $is_syndicate_admin) {
+                        include SM_PLUGIN_DIR . 'templates/admin-update-requests.php';
+                    }
+                    break;
+
+                case 'global-settings':
+                    if ($is_admin || $is_sys_admin || $is_syndicate_admin) {
+                        $sub = $_GET['sub'] ?? 'init';
+                        ?>
+                        <div class="sm-tabs-wrapper" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; overflow-x: auto; white-space: nowrap; padding-bottom: 10px;">
+                            <button class="sm-tab-btn <?php echo $sub == 'init' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('syndicate-settings', this)">تهيئة النظام</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'professional' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('professional-settings', this)">الدرجات والتخصصات</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'finance' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('finance-settings', this)">الرسوم والغرامات</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'notifications' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('notification-settings', this)">التنبيهات والبريد</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'design' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('design-settings', this)">التصميم والمظهر</button>
+                        </div>
+
+                        <div id="syndicate-settings" class="sm-internal-tab" style="display: <?php echo ($sub == 'init') ? 'block' : 'none'; ?>;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+                                <form method="post" style="grid-column: span 2;">
+                                    <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
+                                    <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">بيانات السلطة والنقابة</h4>
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:15px;">
+                                        <div class="sm-form-group"><label class="sm-label">اسم النقابة:</label><input type="text" name="syndicate_name" value="<?php echo esc_attr($syndicate['syndicate_name']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">اسم مسؤول النقابة:</label><input type="text" name="syndicate_officer_name" value="<?php echo esc_attr($syndicate['syndicate_officer_name'] ?? ''); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">رقم الهاتف:</label><input type="text" name="syndicate_phone" value="<?php echo esc_attr($syndicate['phone']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">البريد الإلكتروني:</label><input type="email" name="syndicate_email" value="<?php echo esc_attr($syndicate['email']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group">
+                                            <label class="sm-label">شعار النقابة:</label>
+                                            <div style="display:flex; gap:10px;">
+                                                <input type="text" name="syndicate_logo" id="sm_syndicate_logo_url" value="<?php echo esc_attr($syndicate['syndicate_logo']); ?>" class="sm-input">
+                                                <button type="button" onclick="smOpenMediaUploader('sm_syndicate_logo_url')" class="sm-btn" style="width:auto; font-size:12px; background:var(--sm-secondary-color);">رفع/اختيار</button>
+                                            </div>
+                                        </div>
+                                        <div class="sm-form-group"><label class="sm-label">العنوان:</label><input type="text" name="syndicate_address" value="<?php echo esc_attr($syndicate['address']); ?>" class="sm-input"></div>
+                                    </div>
+                                    <button type="submit" name="sm_save_settings_unified" class="sm-btn" style="width:auto; margin-top:20px;">حفظ بيانات السلطة</button>
+                                </form>
+
+                                <form method="post" style="grid-column: span 2; margin-top:30px; border-top: 1px solid #eee; padding-top:20px;">
+                                    <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
+                                    <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">مسميات أقسام النظام (Dynamic Labels)</h4>
+                                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-top:15px;">
+                                        <?php foreach($labels as $key => $val): ?>
+                                            <div class="sm-form-group">
+                                                <label class="sm-label" style="font-size:11px;"><?php echo str_replace('tab_', '', $key); ?>:</label>
+                                                <input type="text" name="<?php echo $key; ?>" value="<?php echo esc_attr($val); ?>" class="sm-input" style="padding:8px; font-size:12px;">
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <button type="submit" name="sm_save_labels" class="sm-btn" style="width:auto; margin-top:10px; background: #2c3e50;">حفظ المسميات الجديدة</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div id="professional-settings" class="sm-internal-tab" style="display: <?php echo ($sub == 'professional') ? 'block' : 'none'; ?>;">
+                            <form method="post">
+                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+                                    <div class="sm-form-group">
+                                        <label class="sm-label">الدرجات الوظيفية (درجة واحدة في كل سطر):</label>
+                                        <textarea name="professional_grades" class="sm-textarea" rows="8"><?php
+                                            foreach (SM_Settings::get_professional_grades() as $k => $v) echo "$k|$v\n";
+                                        ?></textarea>
+                                        <p style="font-size:11px; color:#666; margin-top:5px;">التنسيق: key|Label (مثال: expert|خبير)</p>
+                                    </div>
+                                    <div class="sm-form-group">
+                                        <label class="sm-label">التخصصات المهنية (تخصص واحد في كل سطر):</label>
+                                        <textarea name="specializations" class="sm-textarea" rows="8"><?php
+                                            foreach (SM_Settings::get_specializations() as $k => $v) echo "$k|$v\n";
+                                        ?></textarea>
+                                        <p style="font-size:11px; color:#666; margin-top:5px;">التنسيق: key|Label (مثال: massage|تدليك رياضي)</p>
+                                    </div>
+                                </div>
+                                <button type="submit" name="sm_save_professional_options" class="sm-btn" style="width:auto; margin-top:10px;">حفظ الخيارات المهنية</button>
+                            </form>
+                        </div>
+
+                        <div id="finance-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'finance' ? 'block' : 'none'; ?>;">
+                            <?php
+                            $fin = SM_Settings::get_finance_settings();
+                            ?>
+                            <form method="post" style="max-width: 800px;">
+                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
+                                <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">تخصيص رسوم الخدمات والغرامات</h4>
+
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px; margin-top:20px;">
+                                    <div style="grid-column: span 2; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                        <h5 style="margin:0 0 10px 0;">💳 اشتراكات العضوية السنوية</h5>
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
+                                            <div class="sm-form-group"><label class="sm-label">قيد جديد:</label><input type="number" name="membership_new" value="<?php echo $fin['membership_new']; ?>" class="sm-input"></div>
+                                            <div class="sm-form-group"><label class="sm-label">تجديد سنوي:</label><input type="number" name="membership_renewal" value="<?php echo $fin['membership_renewal']; ?>" class="sm-input"></div>
+                                            <div class="sm-form-group"><label class="sm-label">غرامة تأخير:</label><input type="number" name="membership_penalty" value="<?php echo $fin['membership_penalty']; ?>" class="sm-input"></div>
+                                        </div>
+                                        <p style="font-size: 11px; color: #e53e3e; margin-top: 5px;">* ملاحظة: تطبق غرامة التأخير تلقائياً بعد انتهاء فترة السماح (1 أبريل من كل عام).</p>
+                                    </div>
+
+                                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                        <h5 style="margin:0 0 10px 0;">📜 تراخيص مزاولة المهنة</h5>
+                                        <div class="sm-form-group"><label class="sm-label">إصدار لأول مرة:</label><input type="number" name="license_new" value="<?php echo $fin['license_new']; ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">تجديد (كل سنتين):</label><input type="number" name="license_renewal" value="<?php echo $fin['license_renewal']; ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">غرامة تأخير سنوية:</label><input type="number" name="license_penalty" value="<?php echo $fin['license_penalty']; ?>" class="sm-input"></div>
+                                    </div>
+
+                                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                        <h5 style="margin:0 0 10px 0;">🏢 تراخيص المنشآت (حسب الفئة)</h5>
+                                        <div class="sm-form-group"><label class="sm-label">الفئة (A):</label><input type="number" name="facility_a" value="<?php echo $fin['facility_a']; ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">الفئة (B):</label><input type="number" name="facility_b" value="<?php echo $fin['facility_b']; ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">الفئة (C):</label><input type="number" name="facility_c" value="<?php echo $fin['facility_c']; ?>" class="sm-input"></div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" name="sm_save_finance_settings" class="sm-btn" style="width:auto; margin-top:25px; padding: 0 40px; height: 45px;">حفظ تسعيرة الخدمات</button>
+                            </form>
+                        </div>
+
+                        <div id="notification-settings" class="sm-internal-tab" style="display: <?php echo ($sub == 'notifications') ? 'block' : 'none'; ?>;">
+                            <?php include SM_PLUGIN_DIR . 'templates/admin-notifications.php'; ?>
+                        </div>
+
+                        <div id="design-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'design' ? 'block' : 'none'; ?>;">
+                            <form method="post">
+                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
+                                <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">إعدادات الألوان والمظهر الشاملة</h4>
+                                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-top:20px;">
+                                    <div class="sm-form-group"><label class="sm-label">الأساسي:</label><input type="color" name="primary_color" value="<?php echo esc_attr($appearance['primary_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">الثانوي:</label><input type="color" name="secondary_color" value="<?php echo esc_attr($appearance['secondary_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">التمييز:</label><input type="color" name="accent_color" value="<?php echo esc_attr($appearance['accent_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">الهيدر:</label><input type="color" name="dark_color" value="<?php echo esc_attr($appearance['dark_color']); ?>" class="sm-input" style="height:40px;"></div>
+
+                                    <div class="sm-form-group"><label class="sm-label">خلفية النظام:</label><input type="color" name="bg_color" value="<?php echo esc_attr($appearance['bg_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">خلفية السايدبار:</label><input type="color" name="sidebar_bg_color" value="<?php echo esc_attr($appearance['sidebar_bg_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">لون الخط:</label><input type="color" name="font_color" value="<?php echo esc_attr($appearance['font_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                    <div class="sm-form-group"><label class="sm-label">لون الحدود:</label><input type="color" name="border_color" value="<?php echo esc_attr($appearance['border_color']); ?>" class="sm-input" style="height:40px;"></div>
+                                </div>
+
+                                <h4 style="margin-top:30px; border-bottom:1px solid #eee; padding-bottom:10px;">الخطوط والخطوط المطبعية (Typography)</h4>
+                                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-top:20px;">
+                                    <div class="sm-form-group"><label class="sm-label">حجم الخط (مثال: 15px):</label><input type="text" name="font_size" value="<?php echo esc_attr($appearance['font_size']); ?>" class="sm-input"></div>
+                                    <div class="sm-form-group"><label class="sm-label">وزن الخط (400, 700...):</label><input type="text" name="font_weight" value="<?php echo esc_attr($appearance['font_weight']); ?>" class="sm-input"></div>
+                                    <div class="sm-form-group"><label class="sm-label">تباعد الأسطر (1.5...):</label><input type="text" name="line_spacing" value="<?php echo esc_attr($appearance['line_spacing']); ?>" class="sm-input"></div>
+                                </div>
+
+                                <button type="submit" name="sm_save_appearance" class="sm-btn" style="width:auto; margin-top:20px;">حفظ كافة تعديلات التصميم</button>
+                            </form>
+                        </div>
+
                         <?php
                     }
                     break;

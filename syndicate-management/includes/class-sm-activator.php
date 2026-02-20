@@ -490,7 +490,7 @@ class SM_Activator {
         // 2. Syndicate Administrator (مسؤول نقابة)
         $syndicate_admin_caps = array(
             'read' => true,
-            'sm_manage_users' => true,
+            'sm_manage_system' => true,
             'sm_manage_members' => true,
             'sm_manage_finance' => true,
             'sm_manage_licenses' => true,

@@ -68,47 +68,51 @@
         </div>
 
         <?php if (current_user_can('sm_manage_finance')): ?>
-        <div style="margin-top: 25px; background: #fffaf0; border: 1px solid #feebc8; padding: 20px; border-radius: 8px;">
-            <h5 style="margin: 0 0 15px 0; color: #744210;">تسجيل دفعة جديدة</h5>
+        <div style="margin-top: 25px; background: #ffffff; border: 2px solid #e2e8f0; padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <h5 style="margin: 0 0 20px 0; color: #111F35; font-size: 1.1em; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <span class="dashicons dashicons-money-alt" style="vertical-align: middle;"></span> تحصيل مبلغ مالي جديد
+            </h5>
             <form id="record-payment-form">
                 <input type="hidden" name="member_id" value="<?php echo $member_id; ?>">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                    <div>
-                        <label class="sm-label" style="font-size:11px;">المبلغ:</label>
-                        <input type="number" name="amount" class="sm-input" value="<?php echo $dues['balance']; ?>" step="0.01" required>
-                    </div>
-                    <div>
-                        <label class="sm-label" style="font-size:11px;">التاريخ:</label>
-                        <input type="date" name="payment_date" class="sm-input" value="<?php echo date('Y-m-d'); ?>" required>
-                    </div>
-                    <div>
-                        <label class="sm-label" style="font-size:11px;">النوع:</label>
-                        <select name="payment_type" class="sm-select">
-                            <option value="membership">اشتراك عضوية</option>
-                            <option value="license">ترخيص مزاولة</option>
-                            <option value="facility">ترخيص منشأة</option>
-                            <option value="penalty">غرامة</option>
-                            <option value="other">أخرى</option>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div style="grid-column: span 2;">
+                        <label class="sm-label" style="font-size:12px; font-weight: 700;">نوع التحصيل (الخدمة):</label>
+                        <select name="payment_type" class="sm-select" style="border-width: 2px; font-weight: 600; background: #f8fafc;">
+                            <option value="membership">💳 اشتراك عضوية سنوي</option>
+                            <option value="license">📜 ترخيص مزاولة مهنة</option>
+                            <option value="facility">🏢 ترخيص منشأة صحية/رياضية</option>
+                            <option value="penalty">⚠️ غرامة تأخير / جزاء مالي</option>
+                            <option value="other">⚙️ خدمات إدارية أخرى</option>
                         </select>
                     </div>
                     <div>
-                        <label class="sm-label" style="font-size:11px;">السنة (للعضوية):</label>
+                        <label class="sm-label" style="font-size:12px;">المبلغ المحصل (ج.م):</label>
+                        <input type="number" name="amount" class="sm-input" value="<?php echo $dues['balance']; ?>" step="0.01" required style="font-size: 1.2em; font-weight: 900; color: #27ae60;">
+                    </div>
+                    <div>
+                        <label class="sm-label" style="font-size:12px;">تاريخ السداد:</label>
+                        <input type="date" name="payment_date" class="sm-input" value="<?php echo date('Y-m-d'); ?>" required>
+                    </div>
+                    <div>
+                        <label class="sm-label" style="font-size:12px;">السنة المستهدفة:</label>
                         <input type="number" name="target_year" class="sm-input" value="<?php echo date('Y'); ?>">
                     </div>
                     <div>
-                        <label class="sm-label" style="font-size:11px;">كود الفاتورة الورقية:</label>
-                        <input type="text" name="paper_invoice_code" class="sm-input" placeholder="أدخل الكود يدوياً">
+                        <label class="sm-label" style="font-size:12px;">رقم الإيصال الورقي:</label>
+                        <input type="text" name="paper_invoice_code" class="sm-input" placeholder="000000">
                     </div>
-                    <div>
-                        <label class="sm-label" style="font-size:11px;">تفاصيل العملية (بالعربية):</label>
-                        <input type="text" name="details_ar" class="sm-input" placeholder="مثال: اشتراك عام 2024">
+                    <div style="grid-column: span 2;">
+                        <label class="sm-label" style="font-size:12px;">بيان العملية المختصر:</label>
+                        <input type="text" name="details_ar" class="sm-input" placeholder="مثال: سداد قيمة اشتراك عام 2024">
                     </div>
                 </div>
                 <div class="sm-form-group">
-                    <label class="sm-label" style="font-size:11px;">ملاحظات إضافية:</label>
-                    <textarea name="notes" class="sm-input" rows="2"></textarea>
+                    <label class="sm-label" style="font-size:12px;">ملاحظات التدقيق:</label>
+                    <textarea name="notes" class="sm-input" rows="2" placeholder="أي ملاحظات إضافية بخصوص هذه العملية..."></textarea>
                 </div>
-                <button type="button" onclick="smSubmitPayment(this)" class="sm-btn" style="background:#27ae60; height: 45px; font-weight: 700;">تأكيد استلام المبلغ وإصدار فاتورة</button>
+                <button type="button" onclick="smSubmitPayment(this)" class="sm-btn" style="background:#27ae60; height: 50px; font-weight: 800; font-size: 1.1em; width: 100%; border-radius: 10px; box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);">
+                    إتمام عملية السداد وإصدار فاتورة إلكترونية
+                </button>
             </form>
         </div>
         <?php endif; ?>

@@ -97,7 +97,12 @@ class SM_Admin {
                 'syndicate_logo' => esc_url_raw($_POST['syndicate_logo']),
                 'address' => sanitize_text_field($_POST['syndicate_address'])
             ));
-            echo '<div class="updated"><p>تم حفظ بيانات النقابة بنجاح.</p></div>';
+            wp_redirect(add_query_arg(['sm_tab' => 'global-settings', 'sub' => 'init', 'settings_saved' => 1], wp_get_referer()));
+            exit;
+        }
+
+        if (isset($_GET['settings_saved'])) {
+            echo '<div class="updated notice is-dismissible"><p>تم حفظ الإعدادات بنجاح.</p></div>';
         }
 
         if (isset($_POST['sm_save_appearance'])) {
@@ -112,7 +117,25 @@ class SM_Admin {
                 'table_style' => sanitize_text_field($_POST['table_style']),
                 'button_style' => sanitize_text_field($_POST['button_style'])
             ));
-            echo '<div class="updated"><p>تم حفظ إعدادات التصميم بنجاح.</p></div>';
+            wp_redirect(add_query_arg(['sm_tab' => 'global-settings', 'sub' => 'design', 'settings_saved' => 1], wp_get_referer()));
+            exit;
+        }
+
+        if (isset($_POST['sm_save_finance_settings'])) {
+            check_admin_referer('sm_admin_action', 'sm_admin_nonce');
+            SM_Settings::save_finance_settings(array(
+                'membership_new' => floatval($_POST['membership_new']),
+                'membership_renewal' => floatval($_POST['membership_renewal']),
+                'membership_penalty' => floatval($_POST['membership_penalty']),
+                'license_new' => floatval($_POST['license_new']),
+                'license_renewal' => floatval($_POST['license_renewal']),
+                'license_penalty' => floatval($_POST['license_penalty']),
+                'facility_a' => floatval($_POST['facility_a']),
+                'facility_b' => floatval($_POST['facility_b']),
+                'facility_c' => floatval($_POST['facility_c'])
+            ));
+            wp_redirect(add_query_arg(['sm_tab' => 'global-settings', 'sub' => 'finance', 'settings_saved' => 1], wp_get_referer()));
+            exit;
         }
 
 

@@ -157,23 +157,31 @@
                             <td dir="ltr" style="text-align: right;"><?php echo esc_html(get_user_meta($u->ID, 'sm_phone', true)); ?></td>
                             <td><?php echo esc_html($u->user_email); ?></td>
                             <td>
-                                <div style="display:flex; gap:8px; justify-content: flex-end;">
-                                    <?php
-                                    $assigned = get_user_meta($u->ID, 'sm_assigned_specializations', true) ?: (get_user_meta($u->ID, 'sm_supervised_grades', true) ?: array());
-                                    ?>
-                                    <button onclick="editSmUser(JSON.parse(this.dataset.user))" data-user='<?php echo esc_attr(wp_json_encode(array(
-                                        "id" => $u->ID,
-                                        "name" => $u->display_name,
-                                        "email" => $u->user_email,
-                                        "login" => $u->user_login,
-                                        "role" => $role_slug,
-                                        "assigned" => $assigned,
-                                        "officer_id" => get_user_meta($u->ID, "sm_syndicateMemberIdAttr", true),
-                                        "phone" => get_user_meta($u->ID, "sm_phone", true),
-                                        "governorate" => get_user_meta($u->ID, "sm_governorate", true)
-                                    ))); ?>' class="sm-btn sm-btn-outline" style="padding: 5px 12px; font-size: 12px;">تعديل</button>
-                                    
-                                    <button onclick="deleteSmUser(<?php echo $u->ID; ?>, '<?php echo esc_js($u->display_name); ?>')" class="sm-btn sm-btn-outline" style="padding: 5px 12px; font-size: 12px; color:#e53e3e;">حذف</button>
+                                <div class="sm-actions-dropdown">
+                                    <button class="sm-actions-trigger">الإجراءات <span class="dashicons dashicons-arrow-down-alt2"></span></button>
+                                    <div class="sm-actions-content">
+                                        <?php
+                                        $assigned = get_user_meta($u->ID, 'sm_assigned_specializations', true) ?: (get_user_meta($u->ID, 'sm_supervised_grades', true) ?: array());
+                                        ?>
+                                        <a href="javascript:void(0)" onclick="editSmUser(JSON.parse(this.parentElement.dataset.user))" class="sm-action-item">
+                                            <span class="dashicons dashicons-edit"></span> تعديل البيانات
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="deleteSmUser(<?php echo $u->ID; ?>, '<?php echo esc_js($u->display_name); ?>')" class="sm-action-item sm-delete" style="color:#e53e3e;">
+                                            <span class="dashicons dashicons-trash"></span> حذف الحساب
+                                        </a>
+                                        <div style="display:none;" data-user='<?php echo esc_attr(wp_json_encode(array(
+                                            "id" => $u->ID,
+                                            "name" => $u->display_name,
+                                            "email" => $u->user_email,
+                                            "login" => $u->user_login,
+                                            "role" => $role_slug,
+                                            "assigned" => $assigned,
+                                            "officer_id" => get_user_meta($u->ID, "sm_syndicateMemberIdAttr", true),
+                                            "phone" => get_user_meta($u->ID, "sm_phone", true),
+                                            "governorate" => get_user_meta($u->ID, "sm_governorate", true),
+                                            "status" => get_user_meta($u->ID, "sm_account_status", true) ?: "active"
+                                        ))); ?>'></div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

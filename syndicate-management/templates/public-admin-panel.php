@@ -315,7 +315,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
             <?php if (current_user_can('sm_manage_licenses')): ?>
                 <div style="display: flex; gap: 10px;">
                     <?php if ($is_sys_admin || $is_admin): ?>
-                        <button onclick="window.location.href='<?php echo add_query_arg('sm_tab', 'financial-logs'); ?>'" class="sm-btn" style="background: #e67e22; height: 38px; font-size: 11px; color: white !important; width: auto;"><span class="dashicons dashicons-media-spreadsheet" style="font-size: 16px; margin-top: 4px;"></span> سجل العمليات الشامل</button>
+                        <button onclick="window.location.href='<?php echo add_query_arg('sm_tab', 'global-archive'); ?>&sub_tab=finance'" class="sm-btn" style="background: #e67e22; height: 38px; font-size: 11px; color: white !important; width: auto;"><span class="dashicons dashicons-portfolio" style="font-size: 16px; margin-top: 4px;"></span> الأرشيف الرقمي</button>
                     <?php endif; ?>
                     <button onclick="window.location.href='<?php echo add_query_arg('sm_tab', 'practice-licenses'); ?>&action=new'" class="sm-btn" style="background: #2c3e50; height: 38px; font-size: 11px; color: white !important; width: auto;">+ إصدار ترخيص مزاولة</button>
                     <button onclick="window.location.href='<?php echo add_query_arg('sm_tab', 'facility-licenses'); ?>&action=new'" class="sm-btn" style="background: #27ae60; height: 38px; font-size: 11px; color: white !important; width: auto;">+ تسجيل منشأة جديدة</button>
@@ -457,12 +457,8 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                 <?php endif; ?>
 
                 <?php if (!$is_restricted && ($is_admin || $is_sys_admin || $is_syndicate_admin)): ?>
-                    <li class="sm-sidebar-item <?php echo in_array($active_tab, ['finance', 'financial-logs']) ? 'sm-active' : ''; ?>">
+                    <li class="sm-sidebar-item <?php echo $active_tab == 'finance' ? 'sm-active' : ''; ?>">
                         <a href="<?php echo add_query_arg('sm_tab', 'finance'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-money-alt"></span> المحاسبة والمالية</a>
-                        <ul class="sm-sidebar-dropdown" style="display: <?php echo in_array($active_tab, ['finance', 'financial-logs']) ? 'block' : 'none'; ?>;">
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'finance'); ?>" class="<?php echo $active_tab == 'finance' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-calculator"></span> <?php echo $labels['tab_finance']; ?></a></li>
-                            <li><a href="<?php echo add_query_arg('sm_tab', 'financial-logs'); ?>" class="<?php echo $active_tab == 'financial-logs' ? 'sm-sub-active' : ''; ?>"><span class="dashicons dashicons-media-spreadsheet"></span> <?php echo $labels['tab_financial_logs']; ?></a></li>
-                        </ul>
                     </li>
                     <li class="sm-sidebar-item <?php echo in_array($active_tab, ['practice-licenses', 'facility-licenses']) ? 'sm-active' : ''; ?>">
                         <a href="<?php echo add_query_arg('sm_tab', 'practice-licenses'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-id-alt"></span> التراخيص والمنشآت</a>
@@ -486,7 +482,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                     </li>
                     <?php if ($is_admin || $is_sys_admin || $is_syndicate_admin): ?>
                         <li class="sm-sidebar-item <?php echo $active_tab == 'global-archive' ? 'sm-active' : ''; ?>">
-                            <a href="<?php echo add_query_arg('sm_tab', 'global-archive'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-portfolio"></span> الأرشيف الرقمي العام</a>
+                            <a href="<?php echo add_query_arg('sm_tab', 'global-archive'); ?>" class="sm-sidebar-link"><span class="dashicons dashicons-portfolio"></span> الأرشيف الرقمي</a>
                         </li>
                     <?php endif; ?>
                     <li class="sm-sidebar-item <?php echo $active_tab == 'surveys' ? 'sm-active' : ''; ?>">
@@ -611,6 +607,7 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                             <button class="sm-tab-btn <?php echo $sub == 'init' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('syndicate-settings', this)">تهيئة النظام</button>
                             <button class="sm-tab-btn <?php echo $sub == 'staff' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('system-users-settings', this)">إدارة مستخدمي النظام</button>
                             <button class="sm-tab-btn" onclick="smOpenInternalTab('professional-settings', this)">الدرجات والتخصصات</button>
+                            <button class="sm-tab-btn <?php echo $sub == 'finance' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('finance-settings', this)">الرسوم والغرامات</button>
                             <button class="sm-tab-btn" onclick="smOpenInternalTab('notification-settings', this)">التنبيهات والبريد</button>
                             <button class="sm-tab-btn <?php echo $sub == 'design' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('design-settings', this)">التصميم والمظهر</button>
                             <button class="sm-tab-btn <?php echo $sub == 'backup' ? 'sm-active' : ''; ?>" onclick="smOpenInternalTab('backup-settings', this)">مركز النسخ الاحتياطي</button>
@@ -659,6 +656,44 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                         <div id="system-users-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'staff' ? 'block' : 'none'; ?>;">
                             <?php include SM_PLUGIN_DIR . 'templates/admin-staff.php'; ?>
+                        </div>
+
+                        <div id="finance-settings" class="sm-internal-tab" style="display: <?php echo $sub == 'finance' ? 'block' : 'none'; ?>;">
+                            <?php
+                            $fin = SM_Settings::get_finance_settings();
+                            ?>
+                            <form method="post" style="max-width: 800px;">
+                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
+                                <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">تخصيص رسوم الخدمات والغرامات</h4>
+
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px; margin-top:20px;">
+                                    <div style="grid-column: span 2; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                        <h5 style="margin:0 0 10px 0;">💳 اشتراكات العضوية السنوية</h5>
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
+                                            <div class="sm-form-group"><label class="sm-label">قيد جديد:</label><input type="number" name="membership_new" value="<?php echo $fin['membership_new']; ?>" class="sm-input"></div>
+                                            <div class="sm-form-group"><label class="sm-label">تجديد سنوي:</label><input type="number" name="membership_renewal" value="<?php echo $fin['membership_renewal']; ?>" class="sm-input"></div>
+                                            <div class="sm-form-group"><label class="sm-label">غرامة تأخير:</label><input type="number" name="membership_penalty" value="<?php echo $fin['membership_penalty']; ?>" class="sm-input"></div>
+                                        </div>
+                                        <p style="font-size: 11px; color: #e53e3e; margin-top: 5px;">* ملاحظة: تطبق غرامة التأخير تلقائياً بعد انتهاء فترة السماح (1 أبريل من كل عام).</p>
+                                    </div>
+
+                                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                        <h5 style="margin:0 0 10px 0;">📜 تراخيص مزاولة المهنة</h5>
+                                        <div class="sm-form-group"><label class="sm-label">إصدار لأول مرة:</label><input type="number" name="license_new" value="<?php echo $fin['license_new']; ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">تجديد (كل سنتين):</label><input type="number" name="license_renewal" value="<?php echo $fin['license_renewal']; ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">غرامة تأخير سنوية:</label><input type="number" name="license_penalty" value="<?php echo $fin['license_penalty']; ?>" class="sm-input"></div>
+                                    </div>
+
+                                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                        <h5 style="margin:0 0 10px 0;">🏢 تراخيص المنشآت (حسب الفئة)</h5>
+                                        <div class="sm-form-group"><label class="sm-label">الفئة (A):</label><input type="number" name="facility_a" value="<?php echo $fin['facility_a']; ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">الفئة (B):</label><input type="number" name="facility_b" value="<?php echo $fin['facility_b']; ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">الفئة (C):</label><input type="number" name="facility_c" value="<?php echo $fin['facility_c']; ?>" class="sm-input"></div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" name="sm_save_finance_settings" class="sm-btn" style="width:auto; margin-top:25px; padding: 0 40px; height: 45px;">حفظ تسعيرة الخدمات</button>
+                            </form>
                         </div>
 
                         <div id="notification-settings" class="sm-internal-tab" style="display:none;">
@@ -944,10 +979,10 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 .sm-logout-btn { background: #e53e3e; color: white; padding: 8px 15px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: 700; display: inline-block; }
 
 .sm-header-circle-icon {
-    width: 40px; height: 40px; background: #f8fafc; border-radius: 50%;
+    width: 40px; height: 40px; background: #ffffff; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     color: var(--sm-dark-color); text-decoration: none !important; position: relative;
-    box-shadow: none; border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
     transition: 0.3s;
 }
 .sm-header-circle-icon:hover { background: #edf2f7; color: var(--sm-primary-color); }

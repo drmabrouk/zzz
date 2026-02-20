@@ -482,6 +482,11 @@ class SM_Activator {
             }
         }
 
+        // Add specific caps for Digital Archive
+        $admin_role->add_cap('sm_manage_archive', true);
+        if (get_role('sm_system_admin')) get_role('sm_system_admin')->add_cap('sm_manage_archive', true);
+        if (get_role('sm_syndicate_admin')) get_role('sm_syndicate_admin')->add_cap('sm_manage_archive', true);
+
         // 2. Syndicate Administrator (مسؤول نقابة)
         $syndicate_admin_caps = array(
             'read' => true,

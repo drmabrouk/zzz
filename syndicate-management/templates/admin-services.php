@@ -144,12 +144,8 @@ $all_requests = $is_official ? SM_DB::get_service_requests() : [];
                 </div>
             </div>
 
-            <div class="sm-form-group">
-                <label class="sm-label">حقول إضافية مخصصة (JSON):</label>
-                <textarea name="required_fields" class="sm-textarea" rows="4">[]</textarea>
-                <p style="font-size: 10px; color: #666; margin-top: 5px;">مثال: [{"name": "year", "label": "سنة التخرج", "type": "number"}]</p>
-            </div>
-            <button type="submit" class="sm-btn">حفظ الخدمة</button>
+            <input type="hidden" name="required_fields" value="[]">
+            <button type="submit" class="sm-btn" style="width: 100%; height: 45px; font-weight: 700; margin-top: 10px;">إضافة الخدمة وتفعيلها</button>
         </form>
     </div>
 </div>
@@ -194,7 +190,12 @@ $all_requests = $is_official ? SM_DB::get_service_requests() : [];
         fd.append('action', 'sm_add_service');
         fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
         fetch(ajaxurl, {method: 'POST', body: fd}).then(r=>r.json()).then(res=>{
-            if (res.success) location.reload(); else alert(res.data);
+            if (res.success) {
+                smShowNotification('تم إضافة الخدمة بنجاح');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alert(res.data);
+            }
         });
     });
 

@@ -1638,7 +1638,8 @@ class SM_Public {
             'options' => [
                 'header' => !empty($_POST['header']),
                 'footer' => !empty($_POST['footer']),
-                'qr' => !empty($_POST['qr'])
+                'qr' => !empty($_POST['qr']),
+                'frame' => !empty($_POST['frame'])
             ]
         ];
 
@@ -1682,6 +1683,8 @@ class SM_Public {
 
         update_option('sm_pub_stamp_url', esc_url_raw($_POST['stamp']));
         update_option('sm_pub_footer_statement', sanitize_textarea_field($_POST['footer']));
+        update_option('sm_pub_color_primary', sanitize_hex_color($_POST['p_color']));
+        update_option('sm_pub_color_secondary', sanitize_hex_color($_POST['s_color']));
 
         $syndicate = SM_Settings::get_syndicate_info();
         $syndicate['syndicate_logo'] = esc_url_raw($_POST['logo']);

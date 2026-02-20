@@ -16,8 +16,12 @@
         },
 
         openInternalTab: function(tabId, element) {
+            console.log('Opening tab:', tabId);
             const target = document.getElementById(tabId);
-            if (!target || !element) return;
+            if (!target || !element) {
+                console.error('Target or element not found:', tabId, element);
+                return;
+            }
             const container = target.parentElement;
             container.querySelectorAll('.sm-internal-tab').forEach(p => p.style.setProperty('display', 'none', 'important'));
             target.style.setProperty('display', 'block', 'important');
@@ -779,41 +783,66 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
                         </div>
 
                         <div id="syndicate-settings" class="sm-internal-tab" style="display: <?php echo ($sub == 'init') ? 'block' : 'none'; ?>;">
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
-                                <form method="post" style="grid-column: span 2;">
-                                    <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
-                                    <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">بيانات السلطة والنقابة</h4>
+                            <form method="post">
+                                <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
+
+                                <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: var(--sm-shadow);">
+                                    <h4 style="margin-top:0; border-bottom:2px solid #f1f5f9; padding-bottom:12px; color: var(--sm-dark-color); display: flex; align-items: center; gap: 10px;">
+                                        <span class="dashicons dashicons-building"></span> بيانات السلطة العليا (Authority Data)
+                                    </h4>
                                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:15px;">
-                                        <div class="sm-form-group"><label class="sm-label">اسم النقابة:</label><input type="text" name="syndicate_name" value="<?php echo esc_attr($syndicate['syndicate_name']); ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">اسم مسؤول النقابة:</label><input type="text" name="syndicate_officer_name" value="<?php echo esc_attr($syndicate['syndicate_officer_name'] ?? ''); ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">رقم الهاتف:</label><input type="text" name="syndicate_phone" value="<?php echo esc_attr($syndicate['phone']); ?>" class="sm-input"></div>
-                                        <div class="sm-form-group"><label class="sm-label">البريد الإلكتروني:</label><input type="email" name="syndicate_email" value="<?php echo esc_attr($syndicate['email']); ?>" class="sm-input"></div>
                                         <div class="sm-form-group">
-                                            <label class="sm-label">شعار النقابة:</label>
+                                            <label class="sm-label">اسم السلطة المشرفة:</label>
+                                            <input type="text" name="authority_name" value="<?php echo esc_attr($syndicate['authority_name'] ?? ''); ?>" class="sm-input" placeholder="مثال: وزارة الشباب والرياضة">
+                                        </div>
+                                        <div class="sm-form-group">
+                                            <label class="sm-label">شعار السلطة:</label>
                                             <div style="display:flex; gap:10px;">
-                                                <input type="text" name="syndicate_logo" id="sm_syndicate_logo_url" value="<?php echo esc_attr($syndicate['syndicate_logo']); ?>" class="sm-input">
-                                                <button type="button" onclick="smOpenMediaUploader('sm_syndicate_logo_url')" class="sm-btn" style="width:auto; font-size:12px; background:var(--sm-secondary-color);">رفع/اختيار</button>
+                                                <input type="text" name="authority_logo" id="sm_authority_logo_url" value="<?php echo esc_attr($syndicate['authority_logo'] ?? ''); ?>" class="sm-input">
+                                                <button type="button" onclick="smOpenMediaUploader('sm_authority_logo_url')" class="sm-btn" style="width:auto; font-size:12px; background:#4a5568;">اختيار</button>
                                             </div>
                                         </div>
-                                        <div class="sm-form-group"><label class="sm-label">العنوان:</label><input type="text" name="syndicate_address" value="<?php echo esc_attr($syndicate['address']); ?>" class="sm-input"></div>
                                     </div>
-                                    <button type="submit" name="sm_save_settings_unified" class="sm-btn" style="width:auto; margin-top:20px;">حفظ بيانات السلطة</button>
-                                </form>
+                                </div>
 
-                                <form method="post" style="grid-column: span 2; margin-top:30px; border-top: 1px solid #eee; padding-top:20px;">
-                                    <?php wp_nonce_field('sm_admin_action', 'sm_admin_nonce'); ?>
-                                    <h4 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">مسميات أقسام النظام (Dynamic Labels)</h4>
+                                <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: var(--sm-shadow);">
+                                    <h4 style="margin-top:0; border-bottom:2px solid #f1f5f9; padding-bottom:12px; color: var(--sm-dark-color); display: flex; align-items: center; gap: 10px;">
+                                        <span class="dashicons dashicons-groups"></span> بيانات النقابة (Union Data)
+                                    </h4>
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:15px;">
+                                        <div class="sm-form-group"><label class="sm-label">اسم النقابة كاملاً:</label><input type="text" name="syndicate_name" value="<?php echo esc_attr($syndicate['syndicate_name']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">اسم رئيس النقابة / المسؤول:</label><input type="text" name="syndicate_officer_name" value="<?php echo esc_attr($syndicate['syndicate_officer_name'] ?? ''); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">رقم التواصل الموحد:</label><input type="text" name="syndicate_phone" value="<?php echo esc_attr($syndicate['phone']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group"><label class="sm-label">البريد الإلكتروني الرسمي:</label><input type="email" name="syndicate_email" value="<?php echo esc_attr($syndicate['email']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group" style="grid-column: span 2;"><label class="sm-label">العنوان الجغرافي للمقر الرئيسي:</label><input type="text" name="syndicate_address" value="<?php echo esc_attr($syndicate['address']); ?>" class="sm-input"></div>
+                                        <div class="sm-form-group" style="grid-column: span 2;">
+                                            <label class="sm-label">شعار النقابة الرسمي (Official Logo):</label>
+                                            <div style="display:flex; gap:10px;">
+                                                <input type="text" name="syndicate_logo" id="sm_syndicate_logo_url" value="<?php echo esc_attr($syndicate['syndicate_logo']); ?>" class="sm-input">
+                                                <button type="button" onclick="smOpenMediaUploader('sm_syndicate_logo_url')" class="sm-btn" style="width:auto; font-size:12px; background:#4a5568;">اختيار الشعار</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
+                                    <h4 style="margin-top:0; border-bottom:2px solid #cbd5e0; padding-bottom:12px; color: var(--sm-dark-color); display: flex; align-items: center; gap: 10px;">
+                                        <span class="dashicons dashicons-admin-settings"></span> مسميات أقسام النظام (Section Labels)
+                                    </h4>
                                     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-top:15px;">
                                         <?php foreach($labels as $key => $val): ?>
                                             <div class="sm-form-group">
                                                 <label class="sm-label" style="font-size:11px;"><?php echo str_replace('tab_', '', $key); ?>:</label>
-                                                <input type="text" name="<?php echo $key; ?>" value="<?php echo esc_attr($val); ?>" class="sm-input" style="padding:8px; font-size:12px;">
+                                                <input type="text" name="<?php echo $key; ?>" value="<?php echo esc_attr($val); ?>" class="sm-input" style="padding:10px; font-size:13px; border-color: #cbd5e0;">
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
-                                    <button type="submit" name="sm_save_labels" class="sm-btn" style="width:auto; margin-top:10px; background: #2c3e50;">حفظ المسميات الجديدة</button>
-                                </form>
-                            </div>
+                                </div>
+
+                                <div style="position: sticky; bottom: 0; background: rgba(255,255,255,0.9); padding: 15px 0; border-top: 1px solid #eee; z-index: 10;">
+                                    <button type="submit" name="sm_save_settings_unified" class="sm-btn" style="width:auto; height:50px; padding: 0 50px; font-size: 1.1em; font-weight: 800; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">حفظ كافة الإعدادات والتهيئة</button>
+                                </div>
+                            </form>
                         </div>
 
                         <div id="professional-settings" class="sm-internal-tab" style="display: <?php echo ($sub == 'professional') ? 'block' : 'none'; ?>;">

@@ -897,7 +897,8 @@ class SM_Public {
             'name' => sanitize_text_field($_POST['name']),
             'description' => sanitize_textarea_field($_POST['description']),
             'fees' => floatval($_POST['fees']),
-            'status' => sanitize_text_field($_POST['status'])
+            'status' => sanitize_text_field($_POST['status']),
+            'selected_profile_fields' => $_POST['selected_profile_fields'] ?? ''
         ];
         if (SM_DB::update_service($id, $data)) wp_send_json_success();
         else wp_send_json_error('Failed to update service');

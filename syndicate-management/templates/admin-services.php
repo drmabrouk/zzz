@@ -144,7 +144,6 @@ $all_requests = $is_official ? SM_DB::get_service_requests() : [];
                 </div>
             </div>
 
-            <input type="hidden" name="required_fields" value="[]">
             <button type="submit" class="sm-btn" style="width: 100%; height: 45px; font-weight: 700; margin-top: 10px;">إضافة الخدمة وتفعيلها</button>
         </form>
     </div>
@@ -208,6 +207,47 @@ $all_requests = $is_official ? SM_DB::get_service_requests() : [];
         fetch(ajaxurl, {method: 'POST', body: fd}).then(r=>r.json()).then(res=>{
             if (res.success) location.reload();
         });
+    };
+
+    window.editService = function(s) {
+        const modal = $('#add-service-modal');
+        modal.find('h3').text('تعديل الخدمة: ' + s.name);
+        modal.find('[name="name"]').val(s.name);
+        modal.find('[name="description"]').val(s.description);
+        modal.find('[name="fees"]').val(s.fees);
+
+        modal.find('input[name="profile_fields[]"]').prop('checked', false);
+        if (s.selected_profile_fields) {
+            try {
+                const fields = JSON.parse(s.selected_profile_fields);
+                fields.forEach(f => {
+                    modal.find(`input[value="${f}"]`).prop('checked', true);
+                });
+            } catch(e) {}
+        }
+
+        $('#add-service-form').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            const fd = new FormData(this);
+            const profileFields = [];
+            $(this).find('input[name="profile_fields[]"]:checked').each(function() {
+                profileFields.push($(this).val());
+            });
+            fd.append('selected_profile_fields', JSON.stringify(profileFields));
+            fd.append('id', s.id);
+            fd.append('status', s.status);
+            fd.append('action', 'sm_update_service');
+            fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
+
+            fetch(ajaxurl, {method: 'POST', body: fd}).then(r=>r.json()).then(res=>{
+                if (res.success) {
+                    smShowNotification('تم تحديث الخدمة بنجاح');
+                    setTimeout(() => location.reload(), 1000);
+                } else alert(res.data);
+            });
+        });
+
+        modal.fadeIn().css('display', 'flex');
     };
 
     window.requestService = function(s) {

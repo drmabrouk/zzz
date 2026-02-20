@@ -103,14 +103,28 @@ class SM_Admin {
     public function display_settings() {
         if (isset($_POST['sm_save_settings_unified'])) {
             check_admin_referer('sm_admin_action', 'sm_admin_nonce');
+
+            // 1. Save Syndicate Info
             SM_Settings::save_syndicate_info(array(
                 'syndicate_name' => sanitize_text_field($_POST['syndicate_name']),
                 'syndicate_officer_name' => sanitize_text_field($_POST['syndicate_officer_name']),
                 'phone' => sanitize_text_field($_POST['syndicate_phone']),
                 'email' => sanitize_email($_POST['syndicate_email']),
                 'syndicate_logo' => esc_url_raw($_POST['syndicate_logo']),
-                'address' => sanitize_text_field($_POST['syndicate_address'])
+                'address' => sanitize_text_field($_POST['syndicate_address']),
+                'authority_name' => sanitize_text_field($_POST['authority_name'] ?? ''),
+                'authority_logo' => esc_url_raw($_POST['authority_logo'] ?? '')
             ));
+
+            // 2. Save Section Labels
+            $labels = SM_Settings::get_labels();
+            foreach($labels as $key => $val) {
+                if (isset($_POST[$key])) {
+                    $labels[$key] = sanitize_text_field($_POST[$key]);
+                }
+            }
+            SM_Settings::save_labels($labels);
+
             wp_redirect(add_query_arg(['sm_tab' => 'global-settings', 'sub' => 'init', 'settings_saved' => 1], wp_get_referer()));
             exit;
         }

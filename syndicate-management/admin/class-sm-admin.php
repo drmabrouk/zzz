@@ -43,7 +43,7 @@ class SM_Admin {
             'sm-dashboard',
             'أعضاء النقابة',
             'أعضاء النقابة',
-            'sm_manage_users',
+            'sm_full_access',
             'sm-staff',
             array($this, 'display_staff_page')
         );
@@ -56,6 +56,20 @@ class SM_Admin {
             'sm-settings',
             array($this, 'display_settings')
         );
+
+        add_submenu_page(
+            'sm-dashboard',
+            'الإعدادات المتقدمة',
+            'الإعدادات المتقدمة',
+            'sm_full_access',
+            'sm-advanced',
+            array($this, 'display_advanced_settings')
+        );
+    }
+
+    public function display_advanced_settings() {
+        $_GET['sm_tab'] = 'advanced-settings';
+        $this->display_settings();
     }
 
     public function enqueue_styles() {
@@ -170,7 +184,8 @@ class SM_Admin {
     }
 
     public function display_staff_page() {
-        $_GET['sm_tab'] = 'staff';
+        $_GET['sm_tab'] = 'advanced-settings';
+        $_GET['sub'] = 'staff';
         $this->display_settings();
     }
 

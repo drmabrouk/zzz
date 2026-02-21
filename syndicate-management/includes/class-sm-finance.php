@@ -22,35 +22,15 @@ class SM_Finance {
         // Membership is annual. If they registered in 2023, they owe for 2023.
         for ($year = $start_year; $year <= $current_year; $year++) {
             if ($year > $last_paid_year) {
-                $base_fee = ($year === $start_year && $last_paid_year == 0) ? (float)$settings['membership_new'] : (float)$settings['membership_renewal'];
+                $is_initial_registration = ($year === $start_year && $last_paid_year == 0);
+                $base_fee = $is_initial_registration ? (float)$settings['membership_new'] : (float)$settings['membership_renewal'];
                 $penalty = 0;
 
-                // Penalty starts April 1st of the year FOLLOWING the membership year
-                // BUT for the current year, if we are in Jan-Mar, it's a grace period (no penalty).
-                // Actually, the renewal is for the NEXT year usually? No, "after December 31... during January, February, March... no fine... fine added starting April 1".
-                // This implies the renewal for year X should be done by Dec 31 of X-1 or within grace period of X.
-
-                // Let's assume:
-                // Membership 2024 is due by Dec 31, 2023.
-                // Grace period: Jan, Feb, Mar 2024.
-                // Penalty starts: April 1, 2024.
-
-                // If current year is 2024, and we are calculating for 2024:
-                // If current_date >= 2024-04-01, add penalty.
-
-                $penalty_date = $year . '-04-01';
-                if ($current_date >= $penalty_date) {
-                    $penalty += (float)$settings['membership_penalty'];
-
-                    // Cumulative penalty for subsequent years of delay
-                    // If it's 2025 and they still haven't paid for 2024:
-                    // April 1, 2025 adds another penalty.
-                    $subsequent_year = $year + 1;
-                    while ($subsequent_year <= $current_year) {
-                        if ($current_date >= $subsequent_year . '-04-01') {
-                            $penalty += (float)$settings['membership_penalty'];
-                        }
-                        $subsequent_year++;
+                // Penalty only applies to renewals after April 1st
+                if (!$is_initial_registration) {
+                    $penalty_date = $year . '-04-01';
+                    if ($current_date >= $penalty_date) {
+                        $penalty = (float)$settings['membership_penalty'];
                     }
                 }
 

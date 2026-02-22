@@ -478,6 +478,19 @@ class SM_Public {
         if (!current_user_can('sm_manage_users') && !current_user_can('manage_options')) wp_send_json_error('Unauthorized');
         if (!wp_verify_nonce($_POST['sm_nonce'], 'sm_syndicateMemberAction')) wp_send_json_error('Security check failed');
 
+        $username = sanitize_user($_POST['user_login']);
+        $email = sanitize_email($_POST['user_email']);
+        $display_name = sanitize_text_field($_POST['display_name']);
+        $role = sanitize_text_field($_POST['role']);
+
+        if (empty($username)) wp_send_json_error('اسم المستخدم مطلوب');
+        if (empty($email)) wp_send_json_error('البريد الإلكتروني مطلوب');
+        if (empty($display_name)) wp_send_json_error('الاسم الكامل مطلوب');
+        if (empty($role)) wp_send_json_error('الدور مطلوب');
+
+        if (username_exists($username)) wp_send_json_error('اسم المستخدم موجود مسبقاً');
+        if (email_exists($email)) wp_send_json_error('البريد الإلكتروني مسجل لمستخدم آخر');
+
         if (!empty($_POST['user_pass'])) {
             $pass = $_POST['user_pass'];
         } else {
@@ -487,9 +500,6 @@ class SM_Public {
             }
             $pass = 'IRS' . $digits;
         }
-        $username = sanitize_user($_POST['user_login']);
-        $email = sanitize_email($_POST['user_email']) ?: $username . '@irseg.org';
-        $role = sanitize_text_field($_POST['role']);
 
         // Prevent role escalation
         if ($role === 'sm_system_admin' && !current_user_can('sm_full_access') && !current_user_can('manage_options')) {
@@ -499,7 +509,7 @@ class SM_Public {
         $user_id = wp_insert_user(array(
             'user_login' => $username,
             'user_email' => $email,
-            'display_name' => sanitize_text_field($_POST['display_name']),
+            'display_name' => $display_name,
             'user_pass' => $pass,
             'role' => $role
         ));
@@ -509,12 +519,30 @@ class SM_Public {
         update_user_meta($user_id, 'sm_temp_pass', $pass);
         update_user_meta($user_id, 'sm_syndicateMemberIdAttr', sanitize_text_field($_POST['officer_id']));
         update_user_meta($user_id, 'sm_phone', sanitize_text_field($_POST['phone']));
+        update_user_meta($user_id, 'sm_account_status', 'active');
 
         $gov = sanitize_text_field($_POST['governorate'] ?? '');
         if (in_array('sm_syndicate_admin', (array)wp_get_current_user()->roles)) {
             $gov = get_user_meta(get_current_user_id(), 'sm_governorate', true);
         }
         update_user_meta($user_id, 'sm_governorate', $gov);
+
+        // If role is member, ensure entry in sm_members table for sync
+        if ($role === 'sm_syndicate_member') {
+            global $wpdb;
+            $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}sm_members WHERE national_id = %s OR wp_user_id = %d", $_POST['officer_id'], $user_id));
+            if (!$exists) {
+                SM_DB::add_member([
+                    'national_id' => sanitize_text_field($_POST['officer_id']),
+                    'name' => sanitize_text_field($_POST['display_name']),
+                    'email' => $email,
+                    'phone' => sanitize_text_field($_POST['phone']),
+                    'governorate' => $gov,
+                    'wp_user_id' => $user_id
+                ]);
+            }
+        }
+
         SM_Logger::log('إضافة مستخدم', "الاسم: {$_POST['display_name']} الرتبة: $role");
         wp_send_json_success($user_id);
     }
@@ -558,13 +586,28 @@ class SM_Public {
         update_user_meta($user_id, 'sm_syndicateMemberIdAttr', sanitize_text_field($_POST['officer_id']));
         update_user_meta($user_id, 'sm_phone', sanitize_text_field($_POST['phone']));
 
+        $gov = sanitize_text_field($_POST['governorate'] ?? '');
         if (!in_array('sm_syndicate_admin', (array)wp_get_current_user()->roles)) {
             if (isset($_POST['governorate'])) {
-                update_user_meta($user_id, 'sm_governorate', sanitize_text_field($_POST['governorate']));
+                update_user_meta($user_id, 'sm_governorate', $gov);
             }
+        } else {
+            $gov = get_user_meta($user_id, 'sm_governorate', true);
         }
 
         update_user_meta($user_id, 'sm_account_status', sanitize_text_field($_POST['account_status']));
+
+        // Sync to sm_members if it's a member
+        if ($role === 'sm_syndicate_member') {
+            global $wpdb;
+            $wpdb->update("{$wpdb->prefix}sm_members", [
+                'name' => sanitize_text_field($_POST['display_name']),
+                'email' => sanitize_email($_POST['user_email']),
+                'phone' => sanitize_text_field($_POST['phone']),
+                'governorate' => $gov
+            ], ['wp_user_id' => $user_id]);
+        }
+
         SM_Logger::log('تحديث مستخدم', "الاسم: {$_POST['display_name']}");
         wp_send_json_success('Updated');
     }
@@ -790,6 +833,70 @@ class SM_Public {
 
         SM_Logger::log('إعادة تهيئة النظام', "تم مسح كافة البيانات وتصفير النظام بالكامل");
         wp_send_json_success();
+    }
+
+    public function ajax_rollback_log() {
+        if (!current_user_can('manage_options') && !current_user_can('sm_full_access')) wp_send_json_error('Unauthorized');
+        check_ajax_referer('sm_admin_action', 'nonce');
+
+        $log_id = intval($_POST['log_id']);
+        global $wpdb;
+        $log = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}sm_logs WHERE id = %d", $log_id));
+
+        if (!$log || strpos($log->details, 'ROLLBACK_DATA:') !== 0) {
+            wp_send_json_error('لا توجد بيانات استعادة لهذه العملية');
+        }
+
+        $json = str_replace('ROLLBACK_DATA:', '', $log->details);
+        $rollback_info = json_decode($json, true);
+
+        if (!$rollback_info || !isset($rollback_info['table'])) {
+            wp_send_json_error('تنسيق بيانات الاستعادة غير صحيح');
+        }
+
+        $table = $rollback_info['table'];
+        $data = $rollback_info['data'];
+
+        if ($table === 'members') {
+            // Re-insert into sm_members
+            $wp_user_id = $data['wp_user_id'] ?? null;
+
+            // Check if user login already exists
+            if (!empty($data['national_id']) && username_exists($data['national_id'])) {
+                wp_send_json_error('لا يمكن الاستعادة: اسم المستخدم (الرقم القومي) موجود بالفعل');
+            }
+
+            // Re-create WP User if it was deleted
+            if ($wp_user_id && !get_userdata($wp_user_id)) {
+                $digits = ''; for ($i = 0; $i < 10; $i++) $digits .= mt_rand(0, 9);
+                $temp_pass = 'IRS' . $digits;
+                $wp_user_id = wp_insert_user([
+                    'user_login' => $data['national_id'],
+                    'user_email' => $data['email'] ?: $data['national_id'] . '@irseg.org',
+                    'display_name' => $data['name'],
+                    'user_pass' => $temp_pass,
+                    'role' => 'sm_syndicate_member'
+                ]);
+                if (is_wp_error($wp_user_id)) wp_send_json_error($wp_user_id->get_error_message());
+                update_user_meta($wp_user_id, 'sm_temp_pass', $temp_pass);
+                if (!empty($data['governorate'])) {
+                    update_user_meta($wp_user_id, 'sm_governorate', $data['governorate']);
+                }
+            }
+
+            unset($data['id']);
+            $data['wp_user_id'] = $wp_user_id;
+
+            $res = $wpdb->insert("{$wpdb->prefix}sm_members", $data);
+            if ($res) {
+                SM_Logger::log('استعادة بيانات', "تم استعادة العضو: " . $data['name']);
+                wp_send_json_success();
+            } else {
+                wp_send_json_error('فشل في إدراج البيانات في قاعدة البيانات: ' . $wpdb->last_error);
+            }
+        }
+
+        wp_send_json_error('نوع الاستعادة غير مدعوم حالياً');
     }
 
     public function ajax_add_survey() {

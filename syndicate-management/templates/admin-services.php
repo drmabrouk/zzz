@@ -19,7 +19,7 @@ $all_requests = $is_official ? SM_DB::get_service_requests() : [];
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <h2 style="margin:0; font-weight: 800; color: var(--sm-dark-color);">الخدمات الرقمية</h2>
         <?php if ($is_official): ?>
-            <button onclick="document.getElementById('add-service-modal').style.display='flex'" class="sm-btn" style="width:auto;">+ إضافة خدمة جديدة</button>
+            <button onclick="smOpenAddServiceModal()" class="sm-btn" style="width:auto;">+ إضافة خدمة جديدة</button>
         <?php endif; ?>
     </div>
 
@@ -174,29 +174,36 @@ $all_requests = $is_official ? SM_DB::get_service_requests() : [];
 
 <script>
 (function($) {
-    // Add Service
-    $('#add-service-form').on('submit', function(e) {
-        e.preventDefault();
-        const fd = new FormData(this);
+    window.smOpenAddServiceModal = function() {
+        const modal = $('#add-service-modal');
+        modal.find('h3').text('إضافة خدمة رقمية جديدة');
+        const form = $('#add-service-form');
+        form[0].reset();
+        form.find('input[name="profile_fields[]"]').prop('checked', false);
 
-        // Collect checked profile fields
-        const profileFields = [];
-        $(this).find('input[name="profile_fields[]"]:checked').each(function() {
-            profileFields.push($(this).val());
-        });
-        fd.append('selected_profile_fields', JSON.stringify(profileFields));
+        form.off('submit').on('submit', function(e) {
+            e.preventDefault();
+            const fd = new FormData(this);
 
-        fd.append('action', 'sm_add_service');
-        fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
-        fetch(ajaxurl, {method: 'POST', body: fd}).then(r=>r.json()).then(res=>{
-            if (res.success) {
-                smShowNotification('تم إضافة الخدمة بنجاح');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                alert(res.data);
-            }
+            const profileFields = [];
+            $(this).find('input[name="profile_fields[]"]:checked').each(function() {
+                profileFields.push($(this).val());
+            });
+            fd.append('selected_profile_fields', JSON.stringify(profileFields));
+
+            fd.append('action', 'sm_add_service');
+            fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
+            fetch(ajaxurl, {method: 'POST', body: fd}).then(r=>r.json()).then(res=>{
+                if (res.success) {
+                    smShowNotification('تم إضافة الخدمة بنجاح');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert(res.data);
+                }
+            });
         });
-    });
+        modal.fadeIn().css('display', 'flex');
+    };
 
     window.deleteService = function(id) {
         if (!confirm('هل أنت متأكد من حذف هذه الخدمة؟')) return;

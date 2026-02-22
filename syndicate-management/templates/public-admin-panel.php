@@ -33,6 +33,50 @@
     window.smShowNotification = SM_UI.showNotification;
     window.smOpenInternalTab = SM_UI.openInternalTab;
 
+    window.smViewLogDetails = function(log) {
+        const detailsBody = document.getElementById('log-details-body');
+        let detailsText = log.details;
+
+        if (log.details.startsWith('ROLLBACK_DATA:')) {
+            try {
+                const data = JSON.parse(log.details.replace('ROLLBACK_DATA:', ''));
+                detailsText = `<pre style="background:#f4f4f4; padding:10px; border-radius:5px; font-size:11px; overflow-x:auto;">${JSON.stringify(data, null, 2)}</pre>`;
+            } catch(e) {
+                detailsText = log.details;
+            }
+        }
+
+        detailsBody.innerHTML = `
+            <div style="display:grid; gap:15px;">
+                <div><strong>المشغل:</strong> ${log.display_name || 'نظام'}</div>
+                <div><strong>الوقت:</strong> ${log.created_at}</div>
+                <div><strong>الإجراء:</strong> <span class="sm-badge sm-badge-low">${log.action}</span></div>
+                <div><strong>بيانات العملية:</strong><br>${detailsText}</div>
+            </div>
+        `;
+        document.getElementById('log-details-modal').style.display = 'flex';
+    };
+
+    window.smRollbackLog = function(logId) {
+        if (!confirm('هل أنت متأكد من رغبتك في استعادة هذه البيانات؟ سيتم محاولة عكس العملية.')) return;
+
+        const fd = new FormData();
+        fd.append('action', 'sm_rollback_log_ajax');
+        fd.append('log_id', logId);
+        fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
+
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>?_=' + Date.now(), { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                smShowNotification('تمت الاستعادة بنجاح');
+                setTimeout(() => location.reload(), 500);
+            } else {
+                alert('خطأ: ' + res.data);
+            }
+        });
+    };
+
     window.smSubmitPayment = function(btn) {
         const form = document.getElementById('record-payment-form');
         const formData = new FormData(form);
@@ -42,7 +86,7 @@
         btn.disabled = true;
         btn.innerText = 'جاري المعالجة...';
 
-        fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: formData })
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>?_=' + Date.now(), { method: 'POST', body: formData })
         .then(r => r.json())
         .then(res => {
             if (res.success) {
@@ -71,7 +115,7 @@
         fd.append('governorate', gov);
         fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
 
-        fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: fd })
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>?_=' + Date.now(), { method: 'POST', body: fd })
         .then(r => r.json())
         .then(res => {
             if (res.success) {
@@ -132,7 +176,7 @@
         fd.append('action', 'sm_delete_log');
         fd.append('log_id', logId);
         fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
-        fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: fd })
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>?_=' + Date.now(), { method: 'POST', body: fd })
         .then(r => r.json()).then(res => { if (res.success) location.reload(); });
     };
 
@@ -141,7 +185,7 @@
         const fd = new FormData();
         fd.append('action', 'sm_clear_all_logs');
         fd.append('nonce', '<?php echo wp_create_nonce("sm_admin_action"); ?>');
-        fetch('<?php echo admin_url('admin-ajax.php'); ?>', { method: 'POST', body: fd })
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>?_=' + Date.now(), { method: 'POST', body: fd })
         .then(r => r.json()).then(res => { if (res.success) location.reload(); });
     };
 
@@ -721,17 +765,18 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 
                                             foreach ($all_logs as $log):
                                                 $can_rollback = strpos($log->details, 'ROLLBACK_DATA:') === 0;
-                                                $details_display = $can_rollback ? 'بيانات قابلة للاستعادة' : esc_html($log->details);
+                                                $details_display = $can_rollback ? 'عملية تتضمن بيانات للاستعادة' : esc_html($log->details);
                                             ?>
                                                 <tr style="border-bottom: 1px solid #f1f5f9;">
                                                     <td style="padding:6px 8px; color: #718096;"><?php echo esc_html($log->created_at); ?></td>
                                                     <td style="padding:6px 8px; font-weight: 600;"><?php echo esc_html($log->display_name ?: 'نظام'); ?></td>
                                                     <td style="padding:6px 8px;"><span style="background:<?php echo $appearance['primary_color']; ?>15; color:<?php echo $appearance['primary_color']; ?>; padding:2px 6px; border-radius:4px; font-weight:700;"><?php echo esc_html($log->action); ?></span></td>
-                                                    <td style="padding:6px 8px; color:#4a5568; line-height:1.4;"><?php echo $details_display; ?></td>
+                                                    <td style="padding:6px 8px; color:#4a5568; line-height:1.4;"><?php echo mb_strimwidth($details_display, 0, 100, "..."); ?></td>
                                                     <td style="padding:6px 8px;">
                                                         <div style="display:flex; gap:5px;">
+                                                            <button onclick='smViewLogDetails(<?php echo json_encode($log); ?>)' class="sm-btn sm-btn-outline" style="padding:2px 8px; font-size:10px;">التفاصيل</button>
                                                             <?php if ($can_rollback): ?>
-                                                                <button class="sm-btn" style="padding:2px 8px; font-size:10px; background:#38a169;">استعادة</button>
+                                                                <button onclick="smRollbackLog(<?php echo $log->id; ?>)" class="sm-btn" style="padding:2px 8px; font-size:10px; background:#38a169;">استعادة</button>
                                                             <?php endif; ?>
                                                             <button onclick="smDeleteLog(<?php echo $log->id; ?>)" class="sm-btn" style="padding:2px 8px; font-size:10px; background:#e53e3e;">حذف</button>
                                                         </div>
@@ -949,6 +994,16 @@ $greeting = ($hour >= 5 && $hour < 12) ? 'صباح الخير' : 'مساء ال�
 </div>
 
 <!-- Global Detailed Finance Modal -->
+<div id="log-details-modal" class="sm-modal-overlay">
+    <div class="sm-modal-content" style="max-width: 700px;">
+        <div class="sm-modal-header">
+            <h3>تفاصيل العملية المسجلة</h3>
+            <button class="sm-modal-close" onclick="document.getElementById('log-details-modal').style.display='none'">&times;</button>
+        </div>
+        <div id="log-details-body" style="padding: 20px;"></div>
+    </div>
+</div>
+
 <div id="sm-finance-member-modal" class="sm-modal-overlay">
     <div class="sm-modal-content" style="max-width: 900px;">
         <div class="sm-modal-header">
